@@ -1,0 +1,153 @@
+%\VignetteIndexEntry{Minimal Bar Plots and Surface Plots in 3D}
+\documentclass {article}
+\usepackage[a4paper,top=2.6cm,bottom=3.6cm,left=3.6cm,right=3.6cm]{geometry}
+\usepackage{parskip,verbatim,amsmath,amssymb,color}
+\usepackage[nogin]{Sweave}
+\pagestyle{myheadings}
+\setlength{\parskip}{0.28cm}
+\DefineVerbatimEnvironment{Sinput}{Verbatim}{xleftmargin=0.75em, formatcom=\color{rin}}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{xleftmargin=0.75em,formatcom=\color{rout}}
+\DefineVerbatimEnvironment{Serror}{Verbatim}{xleftmargin=0.75em,formatcom=\color{rerr}}
+\newcommand {\stitle}[3]
+{	\title {\vspace {-0.6cm} {\normalsize \underline {#1} #2} \\[0.8cm] {\textbf {\huge #3} } }
+	\author {\textbf {Abby Spurdle} }
+	\maketitle
+	\markright{Spurdle, A.\hfill \underline {#1} #2\hfill}
+	\thispagestyle {empty}
+}
+\newcommand {\sabstract}[1]
+{	\begin {center}
+	\begin {minipage}{14.25cm}
+		{\textsl {#1} }
+	\end {minipage}
+	\end {center}
+	\vspace {0.06cm}
+}
+\definecolor{rin}{rgb}{0, 0, 0.32}
+\definecolor{rout}{rgb}{0, 0.14, 0}
+\definecolor{rerr}{rgb}{0.5, 0.025, 0}
+\SweaveOpts{keep.source=TRUE}
+\SweaveOpts{eps=FALSE}
+\SweaveOpts{prefix.string=temp-bivariate}
+\begin{document}
+
+<<echo=false>>=
+options(continue=" ")
+options(SweaveHooks=list(fig=function()
+par(mar=c(4.1, 4.1, 2.6, 1.6), cex=0.7, cex.main=1)))
+@
+
+\stitle {barsurf}{0.1.0}{Minimal\\Bar Plots and Surface Plots in 3D}
+
+\sabstract {Implements plots of discrete functions (bar plots) and continuous functions (surface plots) in 3D. Uses orthographic projection, a nonstandard fixed viewing angle, does not support detailed axes and is designed to be relatively minimal and simple, from a programming perspective. However, does support mixed bar sizes and multiple colors.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+This package implements plots of discrete functions (bar plots) and continuous functions (surface plots) in 3D.
+
+It uses orthographic projection (rather than perspective projection), a nonstandard fixed viewing angle (so, you can't rotate the plots) and currently, does not support detailed axes, however, it's possible that it may in the future.
+
+Bar plots use two colors. The first color is the top of the bars and the second color is the front of the bars. Also, supports mixed bar sizes and multiple colors.
+
+Surface plots interpolate between two colors. Flatter regions are closer to the first color and steeper regions are closer to the second color.
+
+(Ihaka, Murrell, Hornik, Fisher, Stauffer \& Zeileis, 2016) provide the colorspace package. Which I recommend if using multiple colors.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Loading The Packages}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+First, we need to load the packages.
+<<>>=
+library (barsurf)
+library (colorspace)
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Coordinate System}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+This package uses a nonstandard fixed viewing angle. Originally, it was designed for plotting bivariate cumulative distribution functions.
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+plot3d.empty ()
+@
+\end {center}
+
+Note the directions of x and y.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Bar Plots}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+We can construct bar plots using the plot3d.bar() function. It requires at least one argument, z. Note the two commas.
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+x = y = 1:4
+f = function (x, y) x ^ 2 + y ^ 2
+z = outer (x, y, f)
+plot3d.bar (,,z)
+@
+\end {center}
+
+It's possible to specify the x and y arguments (giving mixed bar sizes), if so they should be sorted vectors, length(x) should equal rnow(z)+1 and length(y) should equal nol(z)+1.
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+px = py = (0:4) ^ 2
+plot3d.bar (px, py, z)
+@
+\end {center}
+
+Also, it's possible to specify the colors, including multiple colors.
+
+First, we need to construct a matrix of colors.
+<<>>=
+col.map = c (
+	1, 1, 2, 2,
+	1, 1, 2, 2,
+	3, 3, 4, 4,
+	3, 3, 4, 4)
+col1.palette = rainbow_hcl (4, start=140, end=275, l=75)
+col2.palette = rainbow_hcl (4, start=140, end=275, l=80)
+col1 = matrix (col1.palette [col.map], nrow=4, byrow=TRUE)
+col2 = matrix (col2.palette [col.map], nrow=4, byrow=TRUE)
+@
+
+Second, we construct a plot.
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+plot3d.bar (,,z, col1=col1, col2=col2)
+@
+\end {center}
+
+Mixing the last two things together.
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+plot3d.bar (px, py, z, col1=col1, col2=col2)
+@
+\end {center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Surface Plots}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+We can construct surface plots using the plot3d.surf() function. It works in a similar way to the plot3d.bar() function.
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+x = y = 1:4
+f = function (x, y) x ^ 2 + y ^ 2
+z = outer (x, y, f)
+plot3d.surf (,,z)
+@
+\end {center}
+
+However, if we specify x and y arguments then length(x) should equal rnow(z) and length(y) should equal nol(z).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {References}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Ihaka, R., Murrell, P., Hornik, K., Fisher, J.C., Stauffer, R. \& Zeileis, A. (2016). \\colorspace: Color Space Manipulation
+
+\end{document}
