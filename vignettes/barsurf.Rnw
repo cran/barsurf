@@ -1,5 +1,5 @@
-%\VignetteIndexEntry{Minimal Bar Plots and Surface Plots in 3D}
-\documentclass {article}
+%\VignetteIndexEntry{Bar, Surface and Other Plots}
+\documentclass{article}
 \usepackage[a4paper,top=2.6cm,bottom=3.6cm,left=3.6cm,right=3.6cm]{geometry}
 \usepackage{parskip,verbatim,amsmath,amssymb,color}
 \usepackage[nogin]{Sweave}
@@ -9,10 +9,10 @@
 \DefineVerbatimEnvironment{Soutput}{Verbatim}{xleftmargin=0.75em,formatcom=\color{rout}}
 \DefineVerbatimEnvironment{Serror}{Verbatim}{xleftmargin=0.75em,formatcom=\color{rerr}}
 \newcommand {\stitle}[3]
-{	\title {\vspace {-0.6cm} {\normalsize \underline {#1} #2} \\[0.8cm] {\textbf {\huge #3} } }
+{	\title {\vspace {-0.6cm} {\normalsize #1 #2} \\[0.8cm] {\textbf {\huge #3} } }
 	\author {\textbf {Abby Spurdle} }
 	\maketitle
-	\markright{Spurdle, A.\hfill \underline {#1} #2\hfill}
+	\markright{Spurdle, A.\hfill #1 #2\hfill}
 	\thispagestyle {empty}
 }
 \newcommand {\sabstract}[1]
@@ -37,117 +37,229 @@ options(SweaveHooks=list(fig=function()
 par(mar=c(4.1, 4.1, 2.6, 1.6), cex=0.7, cex.main=1)))
 @
 
-\stitle {barsurf}{0.1.0}{Minimal\\Bar Plots and Surface Plots in 3D}
+\stitle {barsurf}{0.2.0}{Bar, Surface and Other Plots}
 
-\sabstract {Implements plots of discrete functions (bar plots) and continuous functions (surface plots) in 3D. Uses orthographic projection, a nonstandard fixed viewing angle, does not support detailed axes and is designed to be relatively minimal and simple, from a programming perspective. However, does support mixed bar sizes and multiple colors.}
+\sabstract {Produces heat maps, contour plots, bar plots (in 3D) and surface plots (also, in 3D). Is designed for plotting functions of two variables, however, can plot relatively arbitrary matrices. Uses HCL color space, extensively. Also, supports triangular plots and nested matrices.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section* {Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-This package implements plots of discrete functions (bar plots) and continuous functions (surface plots) in 3D.
+This is a relatively minimal R package for mathematical and statistical graphics.
 
-It uses orthographic projection (rather than perspective projection), a nonstandard fixed viewing angle (so, you can't rotate the plots) and currently, does not support detailed axes, however, it's possible that it may in the future.
+Currently, it contains six main functions:
+\begin {itemize}
+	\item plot2d.cell()
+	\item plot2d.contour()
+	\item plot2d.tricontour()
+	\item plot3d.bar()
+	\item plot3d.surface()
+	\item plot3d.trisurface()
+\end {itemize}
 
-Bar plots use two colors. The first color is the top of the bars and the second color is the front of the bars. Also, supports mixed bar sizes and multiple colors.
+The functions plot2d.cell() and plot3d.bar() are designed for functions over a discrete rectangular domain, however, can also be used for relatively small but otherwise arbitrary (integer and numeric) matrices, and bivariate categorical data.
 
-Surface plots interpolate between two colors. Flatter regions are closer to the first color and steeper regions are closer to the second color.
+The functions plot2d.contour() and plot3d.surface() are designed for functions over a continuous rectangular domain. And the functions plot2d.tricontour() and plot3d.trisurface() are designed functions over a continuous triangular domain.
 
-(Ihaka, Murrell, Hornik, Fisher, Stauffer \& Zeileis, 2016) provide the colorspace package. Which I recommend if using multiple colors.
+The function plot2d.cell() produces a heat map. By default, the functions plot2d.contour() and plot2d.tricontour produce contour plots with heat maps. The 3D plots use orthographic projection (rather than perspective projection) and currently, use a fixed viewing angle (so, you can't rotate the plots).
+
+All the plots use colors defined in HCL color space.
+
+All of these functions require at least one argument, z. In general, z is a standard matrix object, however, z can also be a nested matrix object. Either way, increasing row indices represent increasing x values, and increasing column indices represent increasing y values.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section* {Loading The Packages}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-First, we need to load the packages.
+First, we need to load (and attach) the intoo and barsurf packages.
 <<>>=
+library (intoo)
 library (barsurf)
-library (colorspace)
 @
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section* {Coordinate System}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-This package uses a nonstandard fixed viewing angle. Originally, it was designed for plotting bivariate cumulative distribution functions.
-
-\begin {center}
-<<fig=TRUE, width=4.75, height=3>>=
-plot3d.empty ()
-@
-\end {center}
-
-Note the directions of x and y.
+Note that the barsurf package imports the colorspace package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section* {Bar Plots}
+\section* {Heat Maps and Bar Plots}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-We can construct bar plots using the plot3d.bar() function. It requires at least one argument, z. Note the two commas.
-
-\begin {center}
-<<fig=TRUE, width=4.75, height=3>>=
-x = y = 1:4
-f = function (x, y) x ^ 2 + y ^ 2
-z = outer (x, y, f)
-plot3d.bar (,,z)
-@
-\end {center}
-
-It's possible to specify the x and y arguments (giving mixed bar sizes), if so they should be sorted vectors, length(x) should equal rnow(z)+1 and length(y) should equal nol(z)+1.
-
-\begin {center}
-<<fig=TRUE, width=4.75, height=3>>=
-px = py = (0:4) ^ 2
-plot3d.bar (px, py, z)
-@
-\end {center}
-
-Also, it's possible to specify the colors, including multiple colors.
-
-First, we need to construct a matrix of colors.
+Let's construct a simple matrix (representing cells, or discrete areas).
 <<>>=
-col.map = c (
-	1, 1, 2, 2,
-	1, 1, 2, 2,
-	3, 3, 4, 4,
-	3, 3, 4, 4)
-col1.palette = rainbow_hcl (4, start=140, end=275, l=75)
-col2.palette = rainbow_hcl (4, start=140, end=275, l=80)
-col1 = matrix (col1.palette [col.map], nrow=4, byrow=TRUE)
-col2 = matrix (col2.palette [col.map], nrow=4, byrow=TRUE)
+z1 = outer (1:10, 1:10, "+")
 @
 
-Second, we construct a plot.
+And then produce a heat map (in 2D) and a bar plot (in 3D).
 \begin {center}
 <<fig=TRUE, width=4.75, height=3>>=
-plot3d.bar (,,z, col1=col1, col2=col2)
+plot2d.cell (,,z1)
+@
+<<fig=TRUE, width=4.75, height=3>>=
+plot3d.bar (,,z1, zlim=c (0, 20) )
 @
 \end {center}
 
-Mixing the last two things together.
+Note the two commas.
 
-\begin {center}
-<<fig=TRUE, width=4.75, height=3>>=
-plot3d.bar (px, py, z, col1=col1, col2=col2)
-@
-\end {center}
+Also note that the origin of the 3D plot is at the bottom center.
+
+The cells (or bars) don't have to be the same size. We can specify x and y break points, in which case their lengths should be one more than the dimensions of z, and they should be sorted in ascending order.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section* {Surface Plots}
+\section* {Contour Plots and Surface Plots}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-We can construct surface plots using the plot3d.surf() function. It works in a similar way to the plot3d.bar() function.
-
-\begin {center}
-<<fig=TRUE, width=4.75, height=3>>=
-x = y = 1:4
+Let's construct another matrix (but representing points on a surface rather than cells).
+<<>>=
+x = y = 1:20
 f = function (x, y) x ^ 2 + y ^ 2
-z = outer (x, y, f)
-plot3d.surf (,,z)
+z2 = outer (x, y, f)
+@
+
+And then we can produce a contour plot (in 2D) and a surface plot (in 3D).
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+plot2d.contour (,,z2)
+@
+<<fig=TRUE, width=4.75, height=3>>=
+plot3d.surface (,,z2)
 @
 \end {center}
 
-However, if we specify x and y arguments then length(x) should equal rnow(z) and length(y) should equal nol(z).
+It doesn't have to be a regularly spaced grid. We can specify x and y values, in which case their lengths should equal to the dimensions of z.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section* {References}
+\section* {Color Conversion}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Ihaka, R., Murrell, P., Hornik, K., Fisher, J.C., Stauffer, R. \& Zeileis, A. (2016). \\colorspace: Color Space Manipulation
+I've supplied functions for mapping RGB to HCL, and vice versa.
+
+These are just wrappers for functions in the colorspace package, however, they map a vector to a vector, rather than a color object to a color object.
+
+<<>>=
+colv.1.rgb = c (1, 0, 0)
+colv.1.hcl = rgb2hcl (colv.1.rgb)
+round (colv.1.hcl, 2)
+@
+
+<<>>=
+colv.2.hcl = c (0, 50, 60)
+colv.2.rgb = hcl2rgb (colv.2.hcl)
+round (colv.2.rgb, 2)
+@
+
+By default, the hcl2rgb() function, corrects the RGB values, if they're not in the interval [0, 1].
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Changing Colors}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Currently, there are three ways to change the colors:
+\begin {enumerate}
+	\item Use the use.theme() function.
+	\item Set global options, directly.
+	\item Specify color arguments (mainly, colv.1 and colv.2), in each function call.
+\end {enumerate}
+
+We can set the theme by either:
+\begin {center}
+<<fig=TRUE, width=4.75, height=4>>=
+use.theme ("blue")
+test.theme ()
+@
+<<fig=TRUE, width=4.75, height=4>>=
+use.theme ("green")
+test.theme ()
+@
+\end {center}
+
+<<echo=FALSE>>=
+use.theme ("blue")
+@
+
+Global options are stored in a list named barsurf.
+<<>>=
+bso = getOption ("barsurf")
+bso
+@
+
+<<>>=
+bso$plot2d.cell.colv.1 = c (90, 45, 65)
+bso$plot2d.cell.colv.2 = c (360, 45, 65)
+@
+
+<<>>=
+options (barsurf=bso)
+@
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+plot2d.cell (,,z1)
+@
+\end {center}
+
+<<echo=FALSE>>=
+use.theme ("blue")
+@
+
+Note that in this section, I've omitted some R input which resets the theme to blue.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Triangular Plots}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In triangular plots, the matrix must be square, and only upper left part of the matrix (including the diagonal) is used.
+
+Let's create another matrix.
+<<>>=
+x = y = -9:10
+f = function (x, y) 200 - (x ^ 2 + y ^ 2)
+z3 = outer (x, y, f)
+@
+
+I'm going to set the lower right part of the matrix to NAs to make it obvious what's happening here, however, this step is unnecessary.
+<<>>=
+z3 = lr2na (z3)
+P.ht (z3)
+@
+
+And plot them.
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+plot2d.tricontour (,,z3)
+@
+<<fig=TRUE, width=4.75, height=3>>=
+plot3d.trisurface (,,z3)
+@
+\end {center}
+
+Note that the x and y arguments are ignored, if supplied.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Nested Matrices}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+My other package, intoo, contains early prototypes for nested matrices, which can be used for grouped heat maps and grouped bar plots.
+
+Let's create a nested matrix object.
+<<>>=
+z4 = outer (1:8, 1:8, "+")
+@
+
+<<>>=
+sm.1 = P.smatrix (1, 2, 1, 2)
+sm.2 = P.smatrix (1, 4, 1, 4)
+sm.3 = P.smatrix (1, 6, 1, 6)
+sm.4 = P.smatrix (1, 8, 1, 8)
+@
+
+<<>>=
+z4 = P.nmatrix (z4, list (sm.1, sm.2, sm.3, sm.4) )
+@
+
+<<>>=
+z4
+@
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+plot2d.cell (,,z4)
+@
+
+<<fig=TRUE, width=4.75, height=3>>=
+plot3d.bar (,,z4, zlim=c (0, 16), colv.2=c (0, 0, 80), reverse=TRUE)
+@
+\end {center}
 
 \end{document}

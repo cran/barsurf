@@ -9,72 +9,192 @@ par(mar=c(4.1, 4.1, 2.6, 1.6), cex=0.7, cex.main=1)))
 
 
 ###################################################
-### code chunk number 2: barsurf.Rnw:61-63
+### code chunk number 2: barsurf.Rnw:73-75
 ###################################################
+library (intoo)
 library (barsurf)
-library (colorspace)
 
 
 ###################################################
-### code chunk number 3: barsurf.Rnw:72-73
+### code chunk number 3: barsurf.Rnw:84-85
 ###################################################
-getOption("SweaveHooks")[["fig"]]()
-plot3d.empty ()
+z1 = outer (1:10, 1:10, "+")
 
 
 ###################################################
-### code chunk number 4: barsurf.Rnw:85-89
+### code chunk number 4: barsurf.Rnw:90-91
 ###################################################
 getOption("SweaveHooks")[["fig"]]()
-x = y = 1:4
+plot2d.cell (,,z1)
+
+
+###################################################
+### code chunk number 5: barsurf.Rnw:93-94
+###################################################
+getOption("SweaveHooks")[["fig"]]()
+plot3d.bar (,,z1, zlim=c (0, 20) )
+
+
+###################################################
+### code chunk number 6: barsurf.Rnw:108-111
+###################################################
+x = y = 1:20
 f = function (x, y) x ^ 2 + y ^ 2
-z = outer (x, y, f)
-plot3d.bar (,,z)
+z2 = outer (x, y, f)
 
 
 ###################################################
-### code chunk number 5: barsurf.Rnw:96-98
-###################################################
-getOption("SweaveHooks")[["fig"]]()
-px = py = (0:4) ^ 2
-plot3d.bar (px, py, z)
-
-
-###################################################
-### code chunk number 6: barsurf.Rnw:105-114
-###################################################
-col.map = c (
-	1, 1, 2, 2,
-	1, 1, 2, 2,
-	3, 3, 4, 4,
-	3, 3, 4, 4)
-col1.palette = rainbow_hcl (4, start=140, end=275, l=75)
-col2.palette = rainbow_hcl (4, start=140, end=275, l=80)
-col1 = matrix (col1.palette [col.map], nrow=4, byrow=TRUE)
-col2 = matrix (col2.palette [col.map], nrow=4, byrow=TRUE)
-
-
-###################################################
-### code chunk number 7: barsurf.Rnw:119-120
+### code chunk number 7: barsurf.Rnw:116-117
 ###################################################
 getOption("SweaveHooks")[["fig"]]()
-plot3d.bar (,,z, col1=col1, col2=col2)
+plot2d.contour (,,z2)
 
 
 ###################################################
-### code chunk number 8: barsurf.Rnw:127-128
-###################################################
-getOption("SweaveHooks")[["fig"]]()
-plot3d.bar (px, py, z, col1=col1, col2=col2)
-
-
-###################################################
-### code chunk number 9: barsurf.Rnw:138-142
+### code chunk number 8: barsurf.Rnw:119-120
 ###################################################
 getOption("SweaveHooks")[["fig"]]()
-x = y = 1:4
-f = function (x, y) x ^ 2 + y ^ 2
-z = outer (x, y, f)
-plot3d.surf (,,z)
+plot3d.surface (,,z2)
+
+
+###################################################
+### code chunk number 9: barsurf.Rnw:133-136
+###################################################
+colv.1.rgb = c (1, 0, 0)
+colv.1.hcl = rgb2hcl (colv.1.rgb)
+round (colv.1.hcl, 2)
+
+
+###################################################
+### code chunk number 10: barsurf.Rnw:139-142
+###################################################
+colv.2.hcl = c (0, 50, 60)
+colv.2.rgb = hcl2rgb (colv.2.hcl)
+round (colv.2.rgb, 2)
+
+
+###################################################
+### code chunk number 11: barsurf.Rnw:159-161
+###################################################
+getOption("SweaveHooks")[["fig"]]()
+use.theme ("blue")
+test.theme ()
+
+
+###################################################
+### code chunk number 12: barsurf.Rnw:163-165
+###################################################
+getOption("SweaveHooks")[["fig"]]()
+use.theme ("green")
+test.theme ()
+
+
+###################################################
+### code chunk number 13: barsurf.Rnw:169-170
+###################################################
+use.theme ("blue")
+
+
+###################################################
+### code chunk number 14: barsurf.Rnw:174-176
+###################################################
+bso = getOption ("barsurf")
+bso
+
+
+###################################################
+### code chunk number 15: barsurf.Rnw:179-181
+###################################################
+bso$plot2d.cell.colv.1 = c (90, 45, 65)
+bso$plot2d.cell.colv.2 = c (360, 45, 65)
+
+
+###################################################
+### code chunk number 16: barsurf.Rnw:184-185
+###################################################
+options (barsurf=bso)
+
+
+###################################################
+### code chunk number 17: barsurf.Rnw:189-190
+###################################################
+getOption("SweaveHooks")[["fig"]]()
+plot2d.cell (,,z1)
+
+
+###################################################
+### code chunk number 18: barsurf.Rnw:194-195
+###################################################
+use.theme ("blue")
+
+
+###################################################
+### code chunk number 19: barsurf.Rnw:206-209
+###################################################
+x = y = -9:10
+f = function (x, y) 200 - (x ^ 2 + y ^ 2)
+z3 = outer (x, y, f)
+
+
+###################################################
+### code chunk number 20: barsurf.Rnw:213-215
+###################################################
+z3 = lr2na (z3)
+P.ht (z3)
+
+
+###################################################
+### code chunk number 21: barsurf.Rnw:220-221
+###################################################
+getOption("SweaveHooks")[["fig"]]()
+plot2d.tricontour (,,z3)
+
+
+###################################################
+### code chunk number 22: barsurf.Rnw:223-224
+###################################################
+getOption("SweaveHooks")[["fig"]]()
+plot3d.trisurface (,,z3)
+
+
+###################################################
+### code chunk number 23: barsurf.Rnw:236-237
+###################################################
+z4 = outer (1:8, 1:8, "+")
+
+
+###################################################
+### code chunk number 24: barsurf.Rnw:240-244
+###################################################
+sm.1 = P.smatrix (1, 2, 1, 2)
+sm.2 = P.smatrix (1, 4, 1, 4)
+sm.3 = P.smatrix (1, 6, 1, 6)
+sm.4 = P.smatrix (1, 8, 1, 8)
+
+
+###################################################
+### code chunk number 25: barsurf.Rnw:247-248
+###################################################
+z4 = P.nmatrix (z4, list (sm.1, sm.2, sm.3, sm.4) )
+
+
+###################################################
+### code chunk number 26: barsurf.Rnw:251-252
+###################################################
+z4
+
+
+###################################################
+### code chunk number 27: barsurf.Rnw:256-257
+###################################################
+getOption("SweaveHooks")[["fig"]]()
+plot2d.cell (,,z4)
+
+
+###################################################
+### code chunk number 28: barsurf.Rnw:260-261
+###################################################
+getOption("SweaveHooks")[["fig"]]()
+plot3d.bar (,,z4, zlim=c (0, 16), colv.2=c (0, 0, 80), reverse=TRUE)
 
 

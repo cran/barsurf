@@ -1,3 +1,5 @@
-importFrom ("grDevices", "col2rgb", "rgb")
-importFrom ("graphics", "arrows", "axis", "box", "contour.default", "par", "plot", "plot.new", "plot.window", "polygon", "text", "title")
-exportPattern("^[^\\.]")
+importFrom ("methods", "as")
+importFrom ("grDevices", "col2rgb", "hcl", "rgb")
+importFrom ("graphics", "abline", "arrows", "axis", "box", "contour", "par", "plot.new", "plot.window", "polygon", "rect", "text", "title")
+importFrom ("colorspace", "coords", "polarLUV", "RGB")
+exportPattern ("^[^\\.]")

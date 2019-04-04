@@ -1,11 +1,11 @@
 default:
 	make barsurf.pdf
-	make removeother
+	make remove_other
 
 barsurf.pdf: barsurf.tex
 	pdflatex barsurf.tex
 
-removeother:
+remove_other:
 	rm -f *.tex
 	rm -f *.aux
 	rm -f *.log
