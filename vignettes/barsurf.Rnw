@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{Bar, Surface and Other Plots}
+%\VignetteIndexEntry{Bar, Surface and Related Plots}
 \documentclass{article}
 \usepackage[a4paper,top=2.6cm,bottom=3.6cm,left=3.6cm,right=3.6cm]{geometry}
 \usepackage{parskip,verbatim,amsmath,amssymb,color}
@@ -37,7 +37,7 @@ options(SweaveHooks=list(fig=function()
 par(mar=c(4.1, 4.1, 2.6, 1.6), cex=0.7, cex.main=1)))
 @
 
-\stitle {barsurf}{0.2.0}{Bar, Surface and Other Plots}
+\stitle {barsurf}{0.3.0}{Bar, Surface and Related Plots}
 
 \sabstract {Produces heat maps, contour plots, bar plots (in 3D) and surface plots (also, in 3D). Is designed for plotting functions of two variables, however, can plot relatively arbitrary matrices. Uses HCL color space, extensively. Also, supports triangular plots and nested matrices.}
 
@@ -46,7 +46,7 @@ par(mar=c(4.1, 4.1, 2.6, 1.6), cex=0.7, cex.main=1)))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 This is a relatively minimal R package for mathematical and statistical graphics.
 
-Currently, it contains six main functions:
+Currently, it contains six main plotting functions:
 \begin {itemize}
 	\item plot2d.cell()
 	\item plot2d.contour()
@@ -65,6 +65,8 @@ The function plot2d.cell() produces a heat map. By default, the functions plot2d
 All the plots use colors defined in HCL color space.
 
 All of these functions require at least one argument, z. In general, z is a standard matrix object, however, z can also be a nested matrix object. Either way, increasing row indices represent increasing x values, and increasing column indices represent increasing y values.
+
+Note that all the main plotting functions except plot3d.bar() have a contrast parameter, that allows us to decrease the contrast, if required.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section* {Loading The Packages}
@@ -225,7 +227,7 @@ plot3d.trisurface (,,z3)
 @
 \end {center}
 
-Note that the x and y arguments are ignored, if supplied.
+Note that in plot3d.trisurface(), the x and y arguments are ignored.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section* {Nested Matrices}

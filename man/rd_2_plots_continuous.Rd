@@ -8,12 +8,12 @@
 plot2d.contour (x, y, z, zb,
     contours=TRUE, heat.map=TRUE,
     main, xlab="x", ylab="y",
-    colv.1, colv.2,
+    colv.1, colv.2, contrast=0,
     pty="s", \dots)
 
 plot3d.surface (x, y, z,
     main, xlab="x", ylab="y",
-    colv.1, colv.2,
+    colv.1, colv.2, contrast=0,
     zlim, \dots)
 
 #deprecated, do not use
@@ -31,6 +31,7 @@ plot3d.surf (\dots)
 \item{ylab}{.}
 \item{colv.1}{An HCL color vector.}
 \item{colv.2}{An HCL color vector.}
+\item{contrast}{A numeric scalar, giving the relative contrast, currently in the interval [-1, 0].}
 \item{pty}{.}
 \item{zlim}{The z axis limits.}
 \item{\dots}{Other arguments for par().}

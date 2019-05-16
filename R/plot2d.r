@@ -1,7 +1,7 @@
 plot2d.cell = function (xb, yb, z,
 	grid.lines=TRUE,
-	main, xlab="x", ylab="y", xlabs, ylabs,
-	colv.1, colv.2, colv.na,
+	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
+	colv.1, colv.2, colv.na, contrast=0,
 	pty="s", ...)
 {	is.nested = FALSE
 	if (inherits (z, "P.nmatrix") )
@@ -20,31 +20,40 @@ plot2d.cell = function (xb, yb, z,
 		yb = 0:ny
 	else if (length (yb) != ny + 1)
 		stop ("length (yb) != ncol (z)")
+	z = .transform (contrast, z)
 	zlim = range (z, na.rm=TRUE)
 	dz = diff (zlim)
 	if (dz == 0)
 		z [] = 0.5
 	else
 		z = (z - zlim [1]) / dz
-	xm = (xb [-(nx + 1)] + xb [-1]) / 2
-	ym = (yb [-(ny + 1)] + yb [-1]) / 2
 
+	if (missing (xat) )
+	{	xat = (xb [-(nx + 1)] + xb [-1]) / 2
+		if (missing (xlabs) )
+		{	rnames = rownames (z)
+			if (is.null (rnames) )
+				xlabs = 1:nx
+			else
+				xlabs = rnames
+		}
+	}
+	else if (missing (xlabs) )
+		xlabs = format (signif (xat, 2) )
+	if (missing (yat) )
+	{	yat = (yb [-(ny + 1)] + yb [-1]) / 2
+		if (missing (ylabs) )
+		{	cnames = colnames (z)
+			if (is.null (cnames) )
+				ylabs = 1:ny
+			else
+				ylabs = cnames
+		}	
+	}
+	else if (missing (ylabs) )
+		ylabs = format (signif (yat, 2) )
 	if (missing (main) )
 		main = ""
-	if (missing (xlabs) )
-	{	rnames = rownames (z)
-		if (is.null (rnames) )
-			xlabs = 1:nx
-		else
-			xlabs = rnames
-	}
-	if (missing (ylabs) )
-	{	cnames = colnames (z)
-		if (is.null (cnames) )
-			ylabs = 1:ny
-		else
-			ylabs = cnames
-	}
 
 	if (missing (colv.1) )
 		colv.1 = getOption ("barsurf")$plot2d.cell.colv.1
@@ -56,8 +65,8 @@ plot2d.cell = function (xb, yb, z,
 	p0 = par (pty=pty, ...)
 	plot.new ()
 	plot.window (xlim=range (xb), ylim=range (yb), xaxs="i", yaxs="i")
-	axis (1, xm, xlabs)
-	axis (2, ym, ylabs)
+	axis (1, xat, xlabs)
+	axis (2, yat, ylabs)
 	title (main=main, xlab=xlab, ylab=ylab)
 
 	for (i in 1:nx)
@@ -71,7 +80,7 @@ plot2d.cell = function (xb, yb, z,
 
 	if (is.nested)
 	{	for (sm in sms)
-			rect (xb [sm$x1], yb [sm$y1], xb [sm$x2] + 1, yb [sm$y2] + 1)
+			rect (xb [sm$x1], yb [sm$y1], xb [sm$x2 + 1], yb [sm$y2 + 1])
 	
 	}
 	else if (grid.lines)
@@ -84,7 +93,7 @@ plot2d.cell = function (xb, yb, z,
 plot2d.contour = function (x, y, z, zb,
 	contours=TRUE, heat.map=TRUE,
 	main, xlab="x", ylab="y",
-	colv.1, colv.2,
+	colv.1, colv.2, contrast=0,
 	pty="s", ...)
 {	N = 8
 
@@ -119,9 +128,10 @@ plot2d.contour = function (x, y, z, zb,
 			colv.2 = getOption ("barsurf")$plot2d.contour.colv.2
 
 		w = matrix (0, nrow=nx - 1, ncol=ny - 1)
+		z2 = .transform (contrast, z)
 		for (i in 1:(nx - 1) )
 			for (j in 1:(ny - 1) )
-		{	zsub = c (z [i, j], z [i, j + 1], z [i + 1, j], z [i + 1, j + 1])
+		{	zsub = c (z2 [i, j], z2 [i, j + 1], z2 [i + 1, j], z2 [i + 1, j + 1])
 			w [i, j] = mean (zsub)
 		}
 		wlim = range (w)
@@ -152,29 +162,36 @@ plot2d.contour = function (x, y, z, zb,
 plot2d.tricontour = function (x, y, z, zb,
 	contours=TRUE, heat.map=TRUE,
 	main, xlab="x", ylab="y",
-	colv.1, colv.2,
+	colv.1, colv.2, contrast=0,
 	pty="s", ...)
 {	N = 8
 
 	n = .test.z (z)
-	x = 1:n
-	y = 1:n
+	if (missing (x) )
+		x = 1:n
+	else if (length (x) != n)
+		stop ("length (x) != nrow (z)")
+	if (missing (y) )
+		y = 1:n
+	else if (length (y) != n)
+		stop ("length (y) != ncol (z)")
 	z = lr2na(z)
 	zlim = range (z, na.rm=TRUE)
 
 	if (heat.map)
 	{	w1 = w2 = matrix (NA, nrow=n, ncol=n)
+		z2 = .transform (contrast, z)
 		for (i in 1:(n - 1) )
 		{	for (j in 1:(n - i) )
-			{	zsub = c (z [i, j], z [i, j + 1], z [i + 1, j])
-				w1 [i, j] = max (zsub) - min (zsub)
+			{	zsub = c (z2 [i, j], z2 [i, j + 1], z2 [i + 1, j])
+				w1 [i, j] = mean (zsub)
 			}
 		}
 		for (i in 1:(n - 2) )
 		{	if (i < n - 1)
 			{	for (j in 1:(n - i - 1) )
-				{	zsub = c (z [i, j + 1], z [i + 1, j], z [i + 1, j + 1])
-					w2 [i, j] = max (zsub) - min (zsub)
+				{	zsub = c (z2 [i, j + 1], z2 [i + 1, j], z2 [i + 1, j + 1])
+					w2 [i, j] = mean (zsub)
 				}
 			}
 		}

@@ -1,5 +1,5 @@
 plot3d.bar = function (xb, yb, z,
-	main, xlab="x", ylab="y", xlabs, ylabs,
+	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
 	colv.1, colv.2, colvs.sms, reverse=FALSE,
 	zlim, ...)
 {	is.nested = FALSE
@@ -41,15 +41,25 @@ plot3d.bar = function (xb, yb, z,
 	nx = nrow (z)
 	ny = ncol (z)
 	if (missing (xb) )
-		xb = 0:nx
+	{	xlim = c (0, 1)
+		xb = seq (0, 1, length.out=nx + 1)
+	}
 	else if (length (xb) != nx + 1)
 		stop ("length (xb) != nrow (z)")
+	else
+	{	xlim = range (xb)
+		xb = (xb - min (xb) ) / diff (range (xb) )
+	}
 	if (missing (yb) )
-		yb = 0:ny
+	{	ylim = c (0, 1)
+		yb = seq (0, 1, length.out=ny + 1)
+	}
 	else if (length (yb) != ny + 1)
 		stop ("length (yb) != ncol (z)")
-	xb = (xb - min (xb) ) / diff (range (xb) )
-	yb = (yb - min (yb) ) / diff (range (yb) )
+	else
+	{	ylim = range (yb)
+		yb = (yb - min (yb) ) / diff (range (yb) )
+	}
 	if (missing (zlim) )
 		zlim = range (z, na.rm=TRUE)
     dz = diff (zlim)
@@ -60,8 +70,8 @@ plot3d.bar = function (xb, yb, z,
 
 	if (missing (main) )
 		main = ""
-	with.xlabs = (!missing (xlabs) )
-	with.ylabs = (!missing (ylabs) )
+	with.xlabs = (!missing (xat) || !missing (xlabs) )
+	with.ylabs = (!missing (yat) || !missing (ylabs) )
 
 	if (missing (colv.1) )
 		colv.1 = getOption ("barsurf")$plot3d.bar.colv.1
@@ -90,14 +100,24 @@ plot3d.bar = function (xb, yb, z,
 	.barsurf.labs (xlab, ylab)
 
 	if (with.xlabs)
-	{	xm = (xb [-(nx + 1)] + xb [-1]) / 2
-		xlabs = substring (xlabs, 1, 3)
-		.barsurf.xlabs (nx, xm, xlabs)
+	{	if (missing (xat) )
+			xat = (xb [-(nx + 1)] + xb [-1]) / 2
+		xat.2 = (xat - xlim [1]) / diff (xlim)
+		if (missing (xlabs) )
+			xlabs = format (signif (xat, 2) )
+		else
+			xlabs = substring (xlabs, 1, 3)
+		.barsurf.xlabs (xat.2, xlabs)
 	}
 	if (with.ylabs)
-	{	ym = (yb [-(ny + 1)] + yb [-1]) / 2
-		ylabs = substring (ylabs, 1, 3)
-		.barsurf.ylabs (ny, ym, ylabs)
+	{	if (missing (yat) )
+			yat = (yb [-(ny + 1)] + yb [-1]) / 2
+		yat.2 = (yat - ylim [1]) / diff (ylim)
+		if (missing (ylabs) )
+			ylabs = format (signif (yat, 2) )
+		else
+			ylabs = substring (ylabs, 1, 3)
+		.barsurf.ylabs (yat.2, ylabs)
 	}
 
 	for (i in nx:1)
@@ -115,7 +135,7 @@ plot3d.bar = function (xb, yb, z,
 
 plot3d.surface = function (x, y, z,
 	main, xlab="x", ylab="y",
-	colv.1, colv.2,
+	colv.1, colv.2, contrast=0,
 	zlim, ...)
 {	nx = nrow (z)
 	ny = ncol (z)
@@ -150,7 +170,10 @@ plot3d.surface = function (x, y, z,
 	if (dw < 1e-6)
 		w [] = 0.5
 	else
-		w = (w - wlim [1]) / dw
+	{	w = (w - wlim [1]) / dw
+		w = .transform (contrast, w)
+	}
+
 
 	if (missing (main) )
 		main = ""
@@ -189,13 +212,9 @@ plot3d.surf = function (...)
 
 plot3d.trisurface = function (x, y, z,
 	main, xlab="x", ylab="y",
-	colv.1, colv.2,
+	colv.1, colv.2, contrast=0,
 	zlim, ...)
-{	n = nrow (z)
-	if (n != ncol (z) )
-		stop ("z needs to be square matrix")
-	if (n < 3)
-		stop ("nrow (z) < 3")
+{	n = .test.z (z)
 	x = 1:n
 	y = 1:n
 	z = lr2na (z)
@@ -228,11 +247,12 @@ plot3d.trisurface = function (x, y, z,
 	wlim.2 = range (w2, na.rm=TRUE)
 	wlim = range (c (wlim.1, wlim.2) )
 	dw = diff (wlim)
-	if (dw == 0)
+	if (dw < 1e-6)
 		w1 [] = w2 [] = 0.5
 	else
 	{	w1 = (w1 - wlim [1]) / dw
 		w2 = (w2 - wlim [1]) / dw
+		w = .transform.2 (contrast, w1, w2)
 	}
 
 	if (missing (main) )
@@ -255,24 +275,20 @@ plot3d.trisurface = function (x, y, z,
 	title (main)
 	.barsurf.labs (xlab, ylab)
 
-	for (i in 1:(n - 1) )
-	{	for (j in 1:(n - i) )
-		{	xsub = c (x [i], x [i], x [i + 1])
-			ysub = c (y [j], y [j + 1], y [j])
-			zsub = c (z [i, j], z [i, j + 1], z [i + 1, j])
-			colstr = .interpolate.rgb (colv.1, colv.2, w1 [i, j])
-			.barsurf.poly (xsub, ysub, zsub, colstr)
-		}
-	}
-	for (i in 1:(n - 2) )
-	{	if (i < n - 1)
-		{	for (j in 1:(n - i - 1) )
+	for (i in (n - 1):1)
+	{	for (j in (n - i):1)
+		{	if (i < n - 1 && j < n - i)
 			{	xsub = c (x [i], x [i + 1], x [i + 1])
 				ysub = c (y [j + 1], y [j], y [j + 1])
 				zsub = c (z [i, j + 1], z [i + 1, j], z [i + 1, j + 1])
-				colstr = .interpolate.rgb (colv.1, colv.2, w2 [i, j])
+				colstr = .interpolate.rgb (colv.1, colv.2, w$z2 [i, j])
 				.barsurf.poly (xsub, ysub, zsub, colstr)
-			}
+			}	
+			xsub = c (x [i], x [i], x [i + 1])
+			ysub = c (y [j], y [j + 1], y [j])
+			zsub = c (z [i, j], z [i, j + 1], z [i + 1, j])
+			colstr = .interpolate.rgb (colv.1, colv.2, w$z1 [i, j])
+			.barsurf.poly (xsub, ysub, zsub, colstr)
 		}
 	}
 

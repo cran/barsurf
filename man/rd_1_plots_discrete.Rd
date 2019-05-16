@@ -6,12 +6,14 @@
 \usage{
 plot2d.cell (xb, yb, z,
     grid.lines=TRUE,
-    main, xlab="x", ylab="y", xlabs, ylabs,
-    colv.1, colv.2, colv.na,
+    main, xlab="x", ylab="y",
+    xat, yat, xlabs, ylabs,
+    colv.1, colv.2, colv.na, contrast=0,
     pty="s", \dots)
 
 plot3d.bar (xb, yb, z,
-    main, xlab="x", ylab="y", xlabs, ylabs,
+    main, xlab="x", ylab="y",
+    xat, yat, xlabs, ylabs,
     colv.1, colv.2, colvs.sms, reverse=FALSE,
     zlim, \dots)
 }
@@ -23,12 +25,15 @@ plot3d.bar (xb, yb, z,
 \item{main}{.}
 \item{xlab}{.}
 \item{ylab}{.}
+\item{xat}{The x axis tick points.}
+\item{yat}{The y axis tick points.}
 \item{xlabs}{The x axis tick labels.}
 \item{ylabs}{The y axis tick labels.}
 \item{colv.1}{An HCL color vector.}
 \item{colv.2}{An HCL color vector.}
 \item{colv.na}{An HCL color vector.}
 \item{colvs.sms}{A vector (or matrix, with row vectors), giving the colors of the submatrices.}
+\item{contrast}{A numeric scalar, giving the relative contrast, currently in the interval [-1, 0].}
 \item{pty}{.}
 \item{reverse}{If true, apply colors to submatrices in reverse order.}
 \item{zlim}{The z axis limits.}

@@ -8,19 +8,19 @@
 plot2d.tricontour (x, y, z, zb,
     contours=TRUE, heat.map=TRUE,
     main, xlab="x", ylab="y",
-    colv.1, colv.2,
+    colv.1, colv.2, contrast=0,
     pty="s", \dots)
 
 plot3d.trisurface (x, y, z,
     main, xlab="x", ylab="y",
-    colv.1, colv.2,
+    colv.1, colv.2, contrast=0,
     zlim, \dots)
 
 lr2na (z)
 }
 \arguments{
-\item{x}{Ignored.}
-\item{y}{Ignored.}
+\item{x}{An optional sorted vector of x values.}
+\item{y}{An optional sorted vector of y values.}
 \item{z}{A square matrix of point values.}
 \item{zb}{A vector of contour values.}
 \item{contours}{If true (the default), plot contour lines.}
@@ -30,6 +30,7 @@ lr2na (z)
 \item{ylab}{.}
 \item{colv.1}{An HCL color vector.}
 \item{colv.2}{An HCL color vector.}
+\item{contrast}{A numeric scalar, giving the relative contrast, currently in the interval [-1, 0].}
 \item{pty}{.}
 \item{zlim}{The z axis limits.}
 \item{\dots}{Other arguments for par().}
@@ -37,9 +38,9 @@ lr2na (z)
 \details{
 Only the upper left part of the matrix is used.
 
-Refer to the details sections of plot2d.contour and plot3d.surface for more information.
+Refer to the details sections of plot2d.contour() and plot3d.surface() for more information.
 
-Note that the x and y arguments are ignored.
+Note that in plot3d.trisurface(), the x and y arguments are ignored.
 }
 \examples{
 x = y = 1:30

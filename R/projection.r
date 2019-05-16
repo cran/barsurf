@@ -16,16 +16,16 @@
 	text (x, y, c (xlab, ylab) )
 }
 
-.barsurf.xlabs = function (n, x, xlabs)
-{	for (i in 1:n)
-	{	p = .project (x [i], -0.03, 0)
+.barsurf.xlabs = function (x, xlabs)
+{	for (i in 1:length (x) )
+	{	p = .project (x [i], -0.04, 0)
 		text (p [1], p [2], xlabs [i], c (0, 0.5) )
 	}
 }
 
-.barsurf.ylabs = function (n, y, ylabs)
-{	for (i in 1:n)
-	{	p = .project (-0.03, y [i], 0)
+.barsurf.ylabs = function (y, ylabs)
+{	for (i in 1:length (y) )
+	{	p = .project (-0.04, y [i], 0)
 		text (p [1], p [2], ylabs [i], c (1, 0.5) )
 	}
 }
