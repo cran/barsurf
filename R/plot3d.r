@@ -253,6 +253,8 @@ plot3d.trisurface = function (x, y, z,
 	{	w1 = (w1 - wlim [1]) / dw
 		w2 = (w2 - wlim [1]) / dw
 		w = .transform.2 (contrast, w1, w2)
+		w1 = w$z1
+		w2 = w$z2
 	}
 
 	if (missing (main) )
@@ -281,13 +283,13 @@ plot3d.trisurface = function (x, y, z,
 			{	xsub = c (x [i], x [i + 1], x [i + 1])
 				ysub = c (y [j + 1], y [j], y [j + 1])
 				zsub = c (z [i, j + 1], z [i + 1, j], z [i + 1, j + 1])
-				colstr = .interpolate.rgb (colv.1, colv.2, w$z2 [i, j])
+				colstr = .interpolate.rgb (colv.1, colv.2, w2 [i, j])
 				.barsurf.poly (xsub, ysub, zsub, colstr)
 			}	
 			xsub = c (x [i], x [i], x [i + 1])
 			ysub = c (y [j], y [j + 1], y [j])
 			zsub = c (z [i, j], z [i, j + 1], z [i + 1, j])
-			colstr = .interpolate.rgb (colv.1, colv.2, w$z1 [i, j])
+			colstr = .interpolate.rgb (colv.1, colv.2, w1 [i, j])
 			.barsurf.poly (xsub, ysub, zsub, colstr)
 		}
 	}

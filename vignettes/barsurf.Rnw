@@ -37,7 +37,7 @@ options(SweaveHooks=list(fig=function()
 par(mar=c(4.1, 4.1, 2.6, 1.6), cex=0.7, cex.main=1)))
 @
 
-\stitle {barsurf}{0.3.0}{Bar, Surface and Related Plots}
+\stitle {barsurf}{0.3.1}{Bar, Surface and Related Plots}
 
 \sabstract {Produces heat maps, contour plots, bar plots (in 3D) and surface plots (also, in 3D). Is designed for plotting functions of two variables, however, can plot relatively arbitrary matrices. Uses HCL color space, extensively. Also, supports triangular plots and nested matrices.}
 

@@ -1,7 +1,7 @@
 Package: barsurf
 Title: Bar, Surface and Related Plots
-Version: 0.3.0
-Date: 2019-05-16
+Version: 0.3.1
+Date: 2019-05-23
 License: GPL (>= 2)
 Maintainer: Abby Spurdle <spurdle.a@gmail.com>
 Author: Abby Spurdle
@@ -11,6 +11,6 @@ Depends: methods, grDevices, graphics, stats
 Imports: colorspace
 Suggests: intoo
 NeedsCompilation: no
-Packaged: 2019-05-16 01:53:58 UTC; Student9
+Packaged: 2019-05-22 22:18:51 UTC; Student9
 Repository: CRAN
-Date/Publication: 2019-05-16 05:00:10 UTC
+Date/Publication: 2019-05-23 05:00:39 UTC
