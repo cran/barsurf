@@ -1,74 +1,117 @@
-rgb2hcl = function (colv)
-	coords (as (RGB (colv [1], colv [2], colv [3]), "polarLUV") )[3:1]
+#barsurf: Heatmap-Related Plots and Smooth Multiband Color Interpolation
+#Copyright (C), Abby Spurdle, 2020
 
-hcl2rgb = function (colv, correction=TRUE)
-{	colv = coords (as (polarLUV (colv [3], colv [2], colv [1]), "sRGB") )
-	if (correction)
-	{	colv [colv < 0] = 0
-		colv [colv > 1] = 1
-	}
-	colv
+#This program is distributed without any warranty.
+
+#This program is free software.
+#You can modify it and/or redistribute it, under the terms of:
+#The GNU General Public License, version 2, or (at your option) any later version.
+
+#You should have received a copy of this license, with R.
+#Also, this license should be available at:
+#https://cran.r-project.org/web/licenses/GPL-2
+
+.colstr = function (with.alpha, colv)
+{	if (with.alpha)
+		rgb (colv [1], colv [2], colv [3], colv [4])
+	else
+		rgb (colv [1], colv [2], colv [3])
 }
 
-use.theme = function (theme)
-{	bso = list ()
-	if (theme == "blue")
-	{	bso$plot2d.cell.colv.1 = c (120, 30, 80)
-		bso$plot2d.cell.colv.2 = c (300, 30, 80)
-		bso$plot2d.cell.colv.na = c (0, 0, 90)
-		bso$plot2d.contour.colv.1 = c (120, 30, 80)
-		bso$plot2d.contour.colv.2 = c (300, 30, 80)
-		bso$plot3d.bar.colv.1 = c (220, 30, 67.5)
-		bso$plot3d.bar.colv.2 = c (220, 30, 77.5)
-		bso$plot3d.surface.colv.1 = c (220, 30, 62.5)
-		bso$plot3d.surface.colv.2 = c (0, 0, 87.5)
+.mapcol = function (color.space, colvs)
+{	m = ncol (colvs)
+	if (m == 3)
+		with.alpha = FALSE
+	else if (m == 4)
+		with.alpha = TRUE
+	else
+		stop ("cols needs 3 or 4 columns")
+	if (color.space != "sRGB")
+	{	if (color.space == "HCL")
+		{	f = polarLUV
+			colvs [,1:3] = colvs [,3:1]
+		}
+		else if (color.space %in% c ("XYZ", "RGB", "LAB", "polarLAB", "HSV", "HLS", "LUV", "polarLUV") )
+			f = eval (parse (text = color.space) )
+		else
+			stop ("unsupported color space")
+		for (i in 1:nrow (colvs) )
+			colvs [i, 1:3] = coords (as (f (colvs [i, 1], colvs [i, 2], colvs [i, 3]), "sRGB") )
+	}
+	colvs [colvs < 0.001] = 0.001
+	colvs [colvs > 0.999] = 0.999
+	list (with.alpha, colvs)
+}
+
+set.bs.options = function (..., rendering.style="r", theme="blue")
+{	if (! rendering.style %in% c ("r", "p", "e") )
+		stop ("rendering.style not in {r, p, e}")
+	bso = list ()
+	bso$theme = theme
+	bso$rendering.style = rendering.style
+	if (theme == "heat")
+	{	bso$soft.line.col = "#804040"
+		bso$barface = "barface.heat"
+		bso$litmus.fit = "litmus.heat.fit"
+		bso$litmus.fit.hcv = "litmus.heat.fit.hcv"
+		bso$litmus.fit.glass = "glass.rainbow.fit"
+		bso$litmus.fit.flow = "litmus.heat.fit"
+		bso$litmus.fit.lum = "litmus.heat.fit.lum"
+	}
+	else if (theme == "gold")
+	{	bso$soft.line.col = "#D0D000"
+		bso$barface = "barface.gold"
+		bso$litmus.fit = "litmus.blue.fit"
+		bso$litmus.fit.hcv = "litmus.blue.fit.hcv"
+		bso$litmus.fit.glass = "glass.rainbow.fit"
+		bso$litmus.fit.flow = "litmus.blue.fit.flow"
+		bso$litmus.fit.lum = "litmus.gold.fit.lum"
+	}
+	else if (theme == "blue")
+	{	bso$soft.line.col = "#707088"
+		bso$barface = "barface.blue"
+		bso$litmus.fit = "litmus.blue.fit"
+		bso$litmus.fit.hcv = "litmus.blue.fit.hcv"
+		bso$litmus.fit.glass = "glass.rainbow.fit"
+		bso$litmus.fit.flow = "litmus.blue.fit.flow"
+		bso$litmus.fit.lum = "litmus.blue.fit.lum"
 	}
 	else if (theme == "green")
-	{	bso$plot2d.cell.colv.1 = c (160, 60, 87.5)
-		bso$plot2d.cell.colv.2 = c (85, 60, 87.5)
-		bso$plot2d.cell.colv.na = c (0, 0, 90)
-		bso$plot2d.contour.colv.1 = c (160, 60, 87.5)
-		bso$plot2d.contour.colv.2 = c (85, 60, 87.5)
-		bso$plot3d.bar.colv.1 = c (137.5, 60, 70)
-		bso$plot3d.bar.colv.2 = c (137.5, 60, 80)
-		bso$plot3d.surface.colv.1 = c (137.5, 60, 62.5)
-		bso$plot3d.surface.colv.2 = c (0, 0, 87.5)
+	{	bso$soft.line.col = "#608060"
+		bso$barface = "barface.green"
+		bso$litmus.fit = "litmus.green.fit"
+		bso$litmus.fit.hcv = "litmus.green.fit.hcv"
+		bso$litmus.fit.glass = "glass.rainbow.fit"
+		bso$litmus.fit.flow = "litmus.green.fit.flow"
+		bso$litmus.fit.lum = "litmus.green.fit.lum"
+	}
+	else if (theme == "purple")
+	{	bso$soft.line.col = "#685068"
+		bso$barface = "barface.purple"
+		bso$litmus.fit = "litmus.blue.fit"
+		bso$litmus.fit.hcv = "litmus.blue.fit.hcv"
+		bso$litmus.fit.glass = "glass.rainbow.fit"
+		bso$litmus.fit.flow = "litmus.blue.fit.flow"
+		bso$litmus.fit.lum = "litmus.purple.fit.lum"
 	}
 	else
 		stop ("unsupported theme")
 	options (barsurf=bso)
 }
 
-test.theme = function ()
-{	x = y = 1:4
-	f = function (x, y) x + y
-	z1 = outer (x, y, f)
-
-	x = y = 1:12
-	f = function (x, y) x ^ 2 + y ^ 2
-	z2 =outer (x, y, f)
-
-	p0 = par (mfrow=c (2, 2), mar=c (3, 3, 1, 1) )
-	plot2d.cell (,,z1, xlab="", ylab="")
-	plot2d.contour (,,z2, xlab="", ylab="")
-	plot3d.bar (,,z1)
-	plot3d.surface (,,z2)
-	par (p0)
+set.bs.theme = function (theme)
+{	rs = getOption ("barsurf")$rendering.style
+	set.bs.options (rendering.style=rs, theme=theme)
 }
 
-.interpolate.rgb = function (colv.1, colv.2, w)
-{	colv = colv.1 + (colv.2 - colv.1) * w
-	rgb (colv [1], colv [2], colv [3])
-}
+rgb2hcl = function (colv)
+	coords (as (sRGB (colv [1], colv [2], colv [3]), "polarLUV") )[3:1]
 
-.interpolate.hcl = function (colv.1, colv.2, w)
-{	if (colv.1 [2] == colv.2 [2] && colv.1 [3] == colv.2 [3])
-		.interpolate.hue (colv.1, colv.2, w)
-	else
-		.interpolate.rgb (hcl2rgb (colv.1), hcl2rgb (colv.2), w)
-}
-
-.interpolate.hue = function (colv.1, colv.2, w)
-{	h = colv.1 [1] + (colv.2 [1] - colv.1 [1]) * w
-	hcl (h, colv.1 [2], colv.1 [3])
+hcl2rgb = function (colv, correction=FALSE)
+{	colv = coords (as (polarLUV (colv [3], colv [2], colv [1]), "sRGB") )
+	if (correction)
+	{	colv [colv < 0] = 0
+		colv [colv > 1] = 1
+	}
+	colv
 }

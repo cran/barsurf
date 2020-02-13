@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{Bar, Surface and Related Plots}
+%\VignetteIndexEntry{Heatmap-Related Plots and Smooth Multiband Color Interpolation}
 \documentclass{article}
 \usepackage[a4paper,top=2.6cm,bottom=3.6cm,left=3.6cm,right=3.6cm]{geometry}
 \usepackage{parskip,verbatim,amsmath,amssymb,color}
@@ -23,244 +23,638 @@
 	\end {center}
 	\vspace {0.06cm}
 }
+\definecolor{db}{rgb}{0.0, 0, 0.8}
 \definecolor{rin}{rgb}{0, 0, 0.32}
 \definecolor{rout}{rgb}{0, 0.14, 0}
 \definecolor{rerr}{rgb}{0.5, 0.025, 0}
+\newcommand{\tmu}[1]{\textbf {\textsf {\color{db} #1}}}
+
 \SweaveOpts{keep.source=TRUE}
 \SweaveOpts{eps=FALSE}
-\SweaveOpts{prefix.string=temp-bivariate}
+\SweaveOpts{prefix.string=temp-bs}
 \begin{document}
 
 <<echo=false>>=
-options(continue=" ")
+options(continue="  ")
 options(SweaveHooks=list(fig=function()
-par(mar=c(4.1, 4.1, 2.6, 1.6), cex=0.7, cex.main=1)))
+par(mar=c(4.1, 4.1, 1.35, 1.6), cex=0.7, cex.main=1)))
 @
 
-\stitle {barsurf}{0.3.1}{Bar, Surface and Related Plots}
+\stitle {barsurf}{0.4.0}{Heatmap-Related Plots\\and\\Smooth\\Multiband Color Interpolation}
 
-\sabstract {Produces heat maps, contour plots, bar plots (in 3D) and surface plots (also, in 3D). Is designed for plotting functions of two variables, however, can plot relatively arbitrary matrices. Uses HCL color space, extensively. Also, supports triangular plots and nested matrices.}
+\sabstract {Supports combined contour-heat plots and 3D bar/surface plots, for plotting scalar fields, either discretely-spaced or continuously-spaced. Also, supports matrix visualization (per se), isosurfaces (for scalar fields over three variables), triangular plots and vector fields. All plots use static vector graphics (suitable for Sweave documents), but high resolution heatmaps can produce smooth raster-like visual effects. Contains a flexible system for smooth multiband color interpolation in RGB, HSV and HCL color spaces.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section* {Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-This is a relatively minimal R package for mathematical and statistical graphics.
+This package contains a variety of plots.
 
-Currently, it contains six main plotting functions:
+Firstly, there's combined contour-heat plots, 3D bar plots and surface plots.
+
+These can be used to plot scalar fields over two variables, both discretely-spaced and continuously-spaced. Which in turn, can be used to plot functions of two variables.
+
+Also, there's support for matrix visualization (per se), 3D contour plots (or ``Isosurfaces''), 3D-based combined contour-heat plots, triangular plots and vector fields.
+
+3D contour plots and 3D-based combined contour-heat plots can be used to plot scalar fields over three variables.
+
+Most plots have a functional version and a matrix version.
+
+The functional versions, take a function with other arguments such as xlim, ylim and n (number of grid points). The matrix versions, take a matrix of values, along with optional x and y coordinates.
+
+Novel ``litmus'' objects support smooth multiband color interpolation, primarily for heatmaps and surface plots, but may be used for other purposes.
+
+Note that:
+
 \begin {itemize}
-	\item plot2d.cell()
-	\item plot2d.contour()
-	\item plot2d.tricontour()
-	\item plot3d.bar()
-	\item plot3d.surface()
-	\item plot3d.trisurface()
+\item The main references for this package are the help files.\\
+This vignette is only designed to give an overview, references and provide better examples.
+
+\item All plots use vector graphics, but high resolution heatmaps can produce smooth raster-like visual effects.
+
+\item Currently, 3D plots use a diamond-based projection, with fixed viewing angles.\\
+There's no vertical axis, and by default, 3D plots use reference arrows rather than detailed axes.
+
+\item Currently, this package doesn't use color-filled contours.
+
 \end {itemize}
 
-The functions plot2d.cell() and plot3d.bar() are designed for functions over a discrete rectangular domain, however, can also be used for relatively small but otherwise arbitrary (integer and numeric) matrices, and bivariate categorical data.
-
-The functions plot2d.contour() and plot3d.surface() are designed for functions over a continuous rectangular domain. And the functions plot2d.tricontour() and plot3d.trisurface() are designed functions over a continuous triangular domain.
-
-The function plot2d.cell() produces a heat map. By default, the functions plot2d.contour() and plot2d.tricontour produce contour plots with heat maps. The 3D plots use orthographic projection (rather than perspective projection) and currently, use a fixed viewing angle (so, you can't rotate the plots).
-
-All the plots use colors defined in HCL color space.
-
-All of these functions require at least one argument, z. In general, z is a standard matrix object, however, z can also be a nested matrix object. Either way, increasing row indices represent increasing x values, and increasing column indices represent increasing y values.
-
-Note that all the main plotting functions except plot3d.bar() have a contrast parameter, that allows us to decrease the contrast, if required.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section* {Loading The Packages}
+\section* {Preliminary Code\\(And Required Packages)}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-First, we need to load (and attach) the intoo and barsurf packages.
+I will load (and attach) the barsurf and misc3d packages.
 <<>>=
-library (intoo)
 library (barsurf)
+library (misc3d)
 @
 
-Note that the barsurf package imports the colorspace package.
+Note that the barsurf package imports the kubik and colorspace packages.\\
+Also (at the time of writing), the kubik package imports the intoo package, however, this is likely to removed in the near future.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section* {Heat Maps and Bar Plots}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Let's construct a simple matrix (representing cells, or discrete areas).
+Note that the misc3d package needs to be installed and on the search path, in order to use the functions for 3D contour plots.
+
 <<>>=
-z1 = outer (1:10, 1:10, "+")
+set.bs.options (rendering.style="e", theme="blue")
 @
 
-And then produce a heat map (in 2D) and a bar plot (in 3D).
+I'm setting the theme to blue.\\
+(In principle, this is unnecessary because blue is the default).
+
+The ``e'' rendering style, uses options designed for viewing PDF documents, electronically.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Functions of Two Variables\\(Equivalent to Discretely-Spaced Scalar Fields)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The functions \tmu {plot\_dfield} and \tmu {plot\_bar} can used to plot matrices representing discretely-spaced scalar fields.
+
+Each function requires at least one argument, fv, which is a matrix of values.
+
+Increasing rows correspond to increasing (discrete) x values and increasing columns correspond to increasing (discrete) y values.
+
+Alternatively, the functions \tmu {plotf\_dfield} and \tmu {plotf\_bar} may be used, which take a function, along with xlim and ylim arguments.
+
+Let's construct a simple matrix representing the product of two binomial distributions:
+<<>>=
+n = 10
+p = 0.5
+@
+
+<<>>=
+x = y = 0:10
+f = function (x, y, n, p)
+    dbinom (x, n, p) * dbinom (y, n, p)
+fv = outer (x, y, f, n, p)
+@
+
+Then plot in 2D and 3D:
 \begin {center}
 <<fig=TRUE, width=4.75, height=3>>=
-plot2d.cell (,,z1)
+plot_dfield (x, y, fv)
 @
+
 <<fig=TRUE, width=4.75, height=3>>=
-plot3d.bar (,,z1, zlim=c (0, 20) )
+plot_bar (,,fv)
 @
 \end {center}
 
-Note the two commas.
+Note that it's possible to specify the third argument, using two commas, as in the above example.
 
-Also note that the origin of the 3D plot is at the bottom center.
+Also note that if x and y are supplied, they can be specified in one of two ways, using midpoints or breakpoints.
 
-The cells (or bars) don't have to be the same size. We can specify x and y break points, in which case their lengths should be one more than the dimensions of z, and they should be sorted in ascending order.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section* {Contour Plots and Surface Plots}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Let's construct another matrix (but representing points on a surface rather than cells).
+There are many other arguments:
 <<>>=
-x = y = 1:20
-f = function (x, y) x ^ 2 + y ^ 2
-z2 = outer (x, y, f)
+args (plot_dfield)
+args (plotf_dfield)
 @
 
-And then we can produce a contour plot (in 2D) and a surface plot (in 3D).
+Refer to the help files for more information.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Functions of Two Variables\\(Equivalent to Continuously-Spaced Scalar Fields)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The functions \tmu {plot\_cfield} and \tmu {plot\_surface} can used to plot matrices representing continuously-spaced scalar fields.
+
+Similar to the discrete case, each function requires at least one argument, fv, which is a matrix of values.
+
+Increasing rows correspond to increasing (continuous) x values and increasing columns correspond to increasing (continuous) y values.
+
+Alternatively, the functions \tmu {plotf\_cfield} and \tmu {plotf\_surface} may be used, which take a function, along with xlim, ylim and n arguments.
+
+The n argument is a vector of length one or two, giving the number of grid points in each x and y direction.
+
+Let's plot the rotated sinc function, adapted from the graphics::\tmu {persp} examples:
+
 \begin {center}
 <<fig=TRUE, width=4.75, height=3>>=
-plot2d.contour (,,z2)
+plotf_cfield (rotated.sinc, c (-15.5, 15.5), fb=0, n=60, hcv=TRUE)
 @
+
 <<fig=TRUE, width=4.75, height=3>>=
-plot3d.surface (,,z2)
+plotf_surface (rotated.sinc, c (-15.5, 15.5), n=40)
 @
 \end {center}
 
-It doesn't have to be a regularly spaced grid. We can specify x and y values, in which case their lengths should equal to the dimensions of z.
+Note that in the contour-heat plot, the contour values have been set to zero, and the high color variation option has been used.
+
+Also note that the heatmap is not smooth.
+
+We could use a larger n value, or (more efficiently) superimpose a smaller heatmap on top of a larger heatmap.
+
+There's an example in an appendix.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section* {Color Conversion}
+\section* {Matrix Visualization\\(Per Se)}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-I've supplied functions for mapping RGB to HCL, and vice versa.
+By matrix visualization per se, I'm referring to situations where matrices are of interest, in themselves.
 
-These are just wrappers for functions in the colorspace package, however, they map a vector to a vector, rather than a color object to a color object.
+In contrast, all the main plotting functions in this package use matrices, but mainly as intermediate objects, to get from a (mathematical) function to a plot.
 
-<<>>=
-colv.1.rgb = c (1, 0, 0)
-colv.1.hcl = rgb2hcl (colv.1.rgb)
-round (colv.1.hcl, 2)
-@
+The \tmu {plot\_matrix} function is a wrapper for \tmu {plot\_dfield}.\\
+It transposes the fv matrix, and it has different default argument values.
 
-<<>>=
-colv.2.hcl = c (0, 50, 60)
-colv.2.rgb = hcl2rgb (colv.2.hcl)
-round (colv.2.rgb, 2)
-@
+By default, the plotted fv matrix has the same orientation as a matrix in text form. 
 
-By default, the hcl2rgb() function, corrects the RGB values, if they're not in the interval [0, 1].
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section* {Changing Colors}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Currently, there are three ways to change the colors:
-\begin {enumerate}
-	\item Use the use.theme() function.
-	\item Set global options, directly.
-	\item Specify color arguments (mainly, colv.1 and colv.2), in each function call.
-\end {enumerate}
-
-We can set the theme by either:
-\begin {center}
-<<fig=TRUE, width=4.75, height=4>>=
-use.theme ("blue")
-test.theme ()
-@
-<<fig=TRUE, width=4.75, height=4>>=
-use.theme ("green")
-test.theme ()
-@
-\end {center}
-
-<<echo=FALSE>>=
-use.theme ("blue")
-@
-
-Global options are stored in a list named barsurf.
-<<>>=
-bso = getOption ("barsurf")
-bso
-@
+Here's a simple example:
 
 <<>>=
-bso$plot2d.cell.colv.1 = c (90, 45, 65)
-bso$plot2d.cell.colv.2 = c (360, 45, 65)
-@
-
-<<>>=
-options (barsurf=bso)
+M = matrix (sample (1:50), 5, 10)
 @
 
 \begin {center}
 <<fig=TRUE, width=4.75, height=3>>=
-plot2d.cell (,,z1)
+plot_matrix (,,M)
 @
 \end {center}
 
-<<echo=FALSE>>=
-use.theme ("blue")
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Functions of Three Variables\\(Equivalent to Scalar Fields over Three Variables)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+This package contains two sets of functions for plotting scalar-fields over three variables.
+
+In principle, they're designed for continuously-spaced scalar fields, but can be used for discretely-spaced scalar fields with care.
+
+%------------------------------------
+\subsection* {Contour Plots, in 3D}
+%------------------------------------
+Re-iterating, these functions require the misc3d package to be installed and on the search path.
+
+The \tmu {plot\_contour\_3d}, \tmu {plotf\_contour\_3d} and \tmu {nested\_isosurfaces} functions can be used to plot 3D contour plots.
+
+Unlike previous plotting functions, the fv argument is a three dimensional array rather than a matrix.\\
+(And there's a z coordinate, separate from the function value).
+
+The first two variables have the same interpretation as other 3D plots in this package, with the third variable giving the height. Except that x, y and z describe coordinates of the fv array, not the resulting isosurfaces.
+
+Also, its possible for the the x, y, z, fv and n arguments to be lists, one list element for each isosurface.
+
+The \tmu {bispherical.dist} function gives the smallest of two distances from two points, in 3D space.
+
+The following example plots the \tmu {bispherical.dist} function, giving isosurfaces where the function equals 0.5, 1 or 1.75.
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3.75>>=
+nested_isosurfaces (bispherical.dist,
+    c (-3, 3),, c (-2, 2), c (0.5, 1, 1.75),
+    arrows=FALSE)
+@
+\end {center}
+
+Note that my functions use misc3d::\tmu {computeContour3d} function to compute isosurfaces, which in turn, uses the ``Marching Cubes'' algorithm.
+
+%------------------------------------
+\subsection* {Combined Contour-Heat Plots, 3D-Based}
+%------------------------------------
+Here, 3D-based combined contour-heat plots contain a set of 2D slides (or slices).
+
+The \tmu {plot\_cfield\_3d} and \tmu {plotf\_cfield\_3d} functions are similar to the \tmu {plot\_cfield} and \tmu {plotf\_cfield} functions.
+
+Unlike previous plotting functions, the fv argument is a list of two or more matrices.\\
+One matrix for each slide.
+
+The following example also plots the \tmu {bispherical.dist} function, but gives slides rather than isosurfaces:
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3.75>>=
+plotf_cfield_3d (bispherical.dist, c (-3, 3),, c (-2, 2),
+    fb = c (0.5, 1, 1.75, 2.5), emph="l")
 @
 
-Note that in this section, I've omitted some R input which resets the theme to blue.
+\end {center}
+
+Note that there's another example, later.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section* {Triangular Plots}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-In triangular plots, the matrix must be square, and only upper left part of the matrix (including the diagonal) is used.
+The functions \tmu {plot\_tricontour}, \tmu {plot\_trisurface}, \tmu {plotf\_tricontour} and \tmu {plotf\_trisurface} can be used to produce triangular plots.
 
-Let's create another matrix.
+They're similar to the \tmu {plot\_cfield}, \tmu {plot\_surface}, \tmu {plotf\_cfield} and \tmu {plotf\_surface} functions. 
+
+In the matrix version, the matrix must be square, and only upper left part of the matrix (including the diagonal) is used.
+
+In functional versions, the function needs to be a function of three variables (w1, w2, w3) or (x, y and z) etc, which takes values between 0 and 1, and in general, sum to one.\\
+If you need to plot a function that doesn't have these properties, then you need to create a wrapper function.
+
+Here's a simple example:
+
 <<>>=
-x = y = -9:10
-f = function (x, y) 200 - (x ^ 2 + y ^ 2)
-z3 = outer (x, y, f)
+f = function (w1, w2, w3)
+    (w1 - 1 / 3)^2 + (w2 - 1 / 3)^2 + (w3 - 1 / 3)^2
 @
 
-I'm going to set the lower right part of the matrix to NAs to make it obvious what's happening here, however, this step is unnecessary.
-<<>>=
-z3 = lr2na (z3)
-P.ht (z3)
-@
+Note that this function doesn't require it arguments (w1, w2 and w3) to sum to one.
 
-And plot them.
+And plots:
+
 \begin {center}
 <<fig=TRUE, width=4.75, height=3>>=
-plot2d.tricontour (,,z3)
+plotf_tricontour (f, xlab="w1", ylab="w2")
 @
 <<fig=TRUE, width=4.75, height=3>>=
-plot3d.trisurface (,,z3)
+plotf_trisurface (f, xlab="w1", ylab="w2")
 @
 \end {center}
 
-Note that in plot3d.trisurface(), the x and y arguments are ignored.
+Note that the x and y arguments are ignored.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section* {Nested Matrices}
+\section* {Vector Fields}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-My other package, intoo, contains early prototypes for nested matrices, which can be used for grouped heat maps and grouped bar plots.
+The \tmu {plot\_vecfield} and \tmu {plotf\_vecfield} functions can be used to produce plots of vector fields.
 
-Let's create a nested matrix object.
+They're similar to the \tmu {plot\_cfield} and \tmu {plotf\_cfield} functions.
+
+In the matrix version, there's two input matrices, fx (for the x component) and fy (for the y component).
+
+In the functional version, the function needs to return a length-two list, with the first element being the x component and the second element being the y component.
+
+Here's a simple example:\\
+(The \tmu {concentric.field} function generates a vector field with circular flow).
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+plotf_vecfield (concentric.field, c (-1.6, 1.6), c (-1.1, 1.1),
+    m = c (80, 60) )
+@
+\end {center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Color Themes}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Default colors are determined by global options.
+
+A color theme can be set by the \tmu {set.bs.theme} function.
+
 <<>>=
-z4 = outer (1:8, 1:8, "+")
+set.bs.theme ("heat")
+set.bs.theme ("blue")
+@
+
+Supported themes include heat, gold, blue, green and purple.
+
+The heat theme is designed for higher impact than the other themes.
+
+Also, note that the heat, gold and purple themes use some colors from the blue theme.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Color Customization\\(Overview)}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Colors are determined by color functions, which map logical or numeric vectors to character vectors representing R colors.
+
+For bar plots, the color function maps a logical vector to colors, and for other plots, the color function maps a numeric vector to colors. This package uses a system of ``barface'' objects and ``litmus'' objects to simplify this process, however, you can use any functions that meet these requirements.
+
+<<>>=
+colf = barface.heat ()
+colf (c (TRUE, FALSE) )
 @
 
 <<>>=
-sm.1 = P.smatrix (1, 2, 1, 2)
-sm.2 = P.smatrix (1, 4, 1, 4)
-sm.3 = P.smatrix (1, 6, 1, 6)
-sm.4 = P.smatrix (1, 8, 1, 8)
+colf = litmus.heat ()
+colf (c (0.25, 0.75) )
+@
+
+In \tmu {plot\_bar}, the color function (if not supplied) is determined by global options, and for other plots the color function (if not supplied) is determined by a color fit function. Similarly, the color fit function (if not supplied) is determined by global options.
+
+Note that the \tmu {plot\_dfield} and \tmu {plot\_bar} functions also accept a color matrix.\\
+Furthermore, \tmu {plot\_bar} also accepts a list of two color matrices, one for tops and one for sides.
+
+Barface and litmus objects are discussed in more detail in the following sections.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Barface Objects}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The \tmu {barface} function can be used to create new barface objects.
+
+It takes one or two colors (for the bar tops and bar sides) as length-3 or length-4 vectors.
+
+By default, colors assumed to be in sRGB color space, however, other color spaces can be used, including ``HCL''.
+
+A simple sRGB example:
+
+<<>>=
+colf = barface (c (0, 0, 1) )
+@
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (colf)
+@
+\end {center}
+
+And a HCL-based example, specifying both tops and sides:
+
+<<>>=
+colf = barface (c (90, 42.5, 60), c (90, 35, 67.5), "HCL")
+@
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (colf)
+@
+\end {center}
+
+Alternatively, this package has five predefined barface objects, for the heat, gold, blue, green and purple themes:
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (barface.blue () )
+@
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (barface.green () )
+@
+\end {center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Litmus Objects}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The \tmu {litmus} and \tmu {litmus.spline} functions can be used to create litmus objects.
+
+The \tmu {litmus} function takes a 3-column or 4-column matrix, representing length-3 or length-4 color vectors.\\
+Also, it takes lower and upper limits, which default to zero and one.
+
+The \tmu {litmus.spline} function is the same, except that it takes a vector of two or more knots with the same length as the number of colors (number of rows).
+
+A matrix of color vectors:
+
+<<>>=
+colvs = cbind (c (c (100, 150, 200, 250) ), 35, 75)
+rownames (colvs) = c ("first color", "(2nd)", "(3rd)", "last color")
+colnames (colvs) = c ("H", "C", "L")
 @
 
 <<>>=
-z4 = P.nmatrix (z4, list (sm.1, sm.2, sm.3, sm.4) )
+colvs
 @
 
+Note that its not necessary to set row and column names.\\
+(I've just done that to make the matrix easier to interpret).
+
+A litmus object, with the default input range:
+
 <<>>=
-z4
+colf = litmus (,,colvs, "HCL")
+colf
+@
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (colf)
+@
+\end {center}
+
+Alternatively, this package has several predefined litmus objects, for the heat, gold, blue, green and purple themes, in addition to rainbow litmus objects adapted from the colorspace package.
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (litmus.heat () )
+@
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (litmus.blue () )
+@
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (litmus.green () )
+@
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (litmus.rainbow () )
+@
+\end {center}
+
+Note that in general, it's easier to create litmus object using the \tmu {litmus.fit} function, or one of its wrappers, discussed in later sections.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Multi-Litmus Objects}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Multi-litmus objects are litmus-like objects containing other litmus objects.
+
+The \tmu {mlitmus} function constructs a ``mlitmus'' (multi-litmus) object from one or more litmus objects:
+
+<<>>=
+colf = mlitmus (litmus.green (-1, 0, reverse=TRUE), litmus.blue (0, 1) )
+@
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (colf)
+@
+\end {center}
+
+This package contains one predefined multi-litmus object, for a hot and cold effect:
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (hot.and.cold () )
+@
+\end {center}
+
+Note that the above example is questionable, and I recommend caution mixing highly contrasting colors.
+
+Lets create a less trivial example:
+
+<<>>=
+colf1 = glass.rainbow (0, 1.25, 1, start=-200, end=200)
+colf2 = glass.rainbow (1.25, 1.75, c (1, 0.7, 0.4, 0.1), start=200, end=220)
+colf3 = glass.rainbow (1.75, 5, 0.1, start=220)
+@
+
+Note that the third argument is the alpha value.\\
+Other arguments are ranges.
+
+<<>>=
+colf = mlitmus (colf1, colf2, colf3)
+@
+
+Note that if using multi-litmus objects in heatmaps, sudden ``jumps'' may cause artifacts in the plot.
+
+In general, such multi-litmus objects, should contain at least three litmus objects, with the central litmus object interpolating between the end of the first litmus and the start of the third litmus.
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (colf)
+@
+\end {center}
+
+Also note that this multi-litmus object is semi-transparent, and it's possible that (in PDF viewers) lines may appear in it.
+
+Now, I will to recreate the earlier 3D-based contour-heat plot, using different z coordinates, and using the multi-litmus object:
+
+<<>>=
+z = c (-2, -1.6, -1.2, -0.5, -0.1667, 0.1667, 0.5, 1.2, 1.6, 2)
+@
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3.75>>=
+plotf_cfield_3d (bispherical.dist, c (-3, 3), z=z,
+    fb = c (0.5, 1, 1.75, 2.5), color.function=colf)
+@
+\end {center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Fitting Litmus Objects to Data}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In some cases, one may create a litmus object, directly.
+
+However, if creating color functions for heatmaps, then the color function needs to match the function/matrix values.
+
+We can create a function to fit litmus objects by wrapping the \tmu {litmus.fit} function:
+
+<<>>=
+custom.litmus.fit = function (x)
+{   colvs = cbind (c (c (100, 150, 200, 250) ), 35, 75)
+    litmus.fit (x, colvs, "HCL")
+}
+@
+
+Let's say we have a vector, x:
+<<>>=
+x = runif (10)
+@
+
+We can fit a litmus object using our function:
+<<>>=
+range (x)
+custom.litmus.fit (x)
+@
+
+This package contains wrappers for the \tmu {litmus.fit} function, with predefined colors:
+<<>>=
+litmus.blue.fit (x)
+@
+
+The \tmu {litmus.fit} function and most of its wrappers have an ``equalize'' parameter.
+
+Let say we have function values from a function with high curvature:
+
+<<>>=
+x = y = seq (0, 1,, 30)
+fv = outer (x, y)
+fv = fv^3
+@
+
+We can create litmus objects with different equalize values:
+
+<<>>=
+colf.simple = litmus.blue.fit (fv, equalize=0)
+colf.equalized = litmus.blue.fit (fv, equalize=1)
+@
+
+With no equalization the resulting litmus object appears relatively even:
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (colf.simple)
+@
+\end {center}
+
+However, in the resulting heatmap, the opposite happens:\\
+(The plot is mostly green).
+
+<<>>=
+fb = c (0.0014, 0.0881)
 @
 
 \begin {center}
 <<fig=TRUE, width=4.75, height=3>>=
-plot2d.cell (,,z4)
+plot_cfield (,,fv, fb=fb, color.function=colf.simple)
+@
+\end {center}
+
+In contrast, the completely equalized litmus object, doesn't appear even:
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=0.8>>=
+plot (colf.equalized)
+@
+\end {center}
+
+But the resulting heatmap is:
+
+\begin {center}
+<<fig=TRUE, width=4.75, height=3>>=
+plot_cfield (,,fv, fb=fb, color.function=colf.equalized)
+@
+\end {center}
+
+Note that by default, the equalize parameter is 0.85.
+
+This results in a softer effect, than the completely equalized example above.
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {References}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection* {R Packages}
+
+Spurdle, A. (2019). kubik: Cubic Hermite Splines
+
+Ihaka, R., Murrell, P., Hornik, K., Fisher, J. Stauffer, R., Wilke, C., McWhite, C., \&\\Zeileis, A. (2019). colorspace: A Toolbox for Manipulating and Assessing Colors and Palettes
+
+Feng, D., \& Tierney, L. (2013) misc3d: Miscellaneous 3D Plots
+
+\subsection* {Notes}
+
+The colorspace package contains further color-related references.
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section* {Appendix:\\Improved Contour-Heat Plot}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<<>>=
+x = y = seq (-15.5, 15.5, length.out=60)
+fv = outer (x, y, rotated.sinc)
+colf = litmus.blue.fit.hcv (fv)
 @
 
+\begin {center}
 <<fig=TRUE, width=4.75, height=3>>=
-plot3d.bar (,,z4, zlim=c (0, 16), colv.2=c (0, 0, 80), reverse=TRUE)
+#larger heatmap
+plot_cfield (x, y, fv,
+    contours=FALSE, color.function=colf)
+#smaller heatmap
+plotf_cfield (rotated.sinc, c (-4, 4),
+    add=TRUE, contours=FALSE, color.function=colf, n=60)
+#contour lines
+plot_cfield (x, y, fv,
+    add=TRUE, fb=0, heatmap=FALSE)
 @
 \end {center}
 

@@ -1,16 +1,16 @@
 Package: barsurf
-Title: Bar, Surface and Related Plots
-Version: 0.3.1
-Date: 2019-05-23
+Title: Heatmap-Related Plots and Smooth Multiband Color Interpolation
+Version: 0.4.0
+Date: 2020-02-14
 License: GPL (>= 2)
 Maintainer: Abby Spurdle <spurdle.a@gmail.com>
 Author: Abby Spurdle
 URL: https://sites.google.com/site/spurdlea/r
-Description: Produces heat maps, contour plots, bar plots (in 3D) and surface plots (also, in 3D). Is designed for plotting functions of two variables, however, can plot relatively arbitrary matrices. Uses HCL color space, extensively. Also, supports triangular plots and nested matrices.
-Depends: methods, grDevices, graphics, stats
-Imports: colorspace
-Suggests: intoo
+Description: Supports combined contour-heat plots and 3D bar/surface plots, for plotting scalar fields, either discretely-spaced or continuously-spaced. Also, supports matrix visualization (per se), isosurfaces (for scalar fields over three variables), triangular plots and vector fields. All plots use static vector graphics (suitable for Sweave documents), but high resolution heatmaps can produce smooth raster-like visual effects. Contains a flexible system for smooth multiband color interpolation in RGB, HSV and HCL color spaces.
+Depends: methods
+Imports: kubik, colorspace
+Suggests: intoo, vectools, misc3d, Matrix
 NeedsCompilation: no
-Packaged: 2019-05-22 22:18:51 UTC; Student9
+Packaged: 2020-02-13 19:37:41 UTC; spurdle
 Repository: CRAN
-Date/Publication: 2019-05-23 05:00:39 UTC
+Date/Publication: 2020-02-13 23:00:02 UTC
