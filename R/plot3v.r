@@ -63,8 +63,8 @@
 	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
 	xlim, ylim, zlim,
 	axes=TRUE, arrows=TRUE,
-	base.lines,
-	ncontours=2, wire.frame.col="#808080", iso.cols)
+	panel.lines,
+	ncontours=2, wire.frame.color="#808080", iso.colors)
 {	if (missing (fb) )
 	{	if (ncontours == 0)
 			stop ("ncontours == 0")
@@ -152,30 +152,40 @@
 	if (axes [2] && ! arrows [2])
 		.surface.axes ("y", ylim, yat, ylabs)
 
-	v = .line.attr (wire.frame, wire.frame.col)
+	v = .line.attr (wire.frame, wire.frame.color)
 	lwd = v [[1]]
-	wire.frame.col = v [[2]]
-	if (missing (iso.cols) )
-	{	iso.cols = c ("#DDA06060", "#0040FF20", "#80FF0016")
+	wire.frame.color = v [[2]]
+	if (missing (iso.colors) )
+	{	iso.colors = c ("#DDA06060", "#0040FF20", "#80FF0016")
 		if (ncontours == 1)
-			iso.cols = iso.cols [2]
+			iso.colors = iso.colors [2]
 		else if (ncontours == 2 || ncontours ==3)
-			iso.cols = iso.cols [1:ncontours]
+			iso.colors = iso.colors [1:ncontours]
 		else
 			stop ("for > 3 isosurfaces, please specify their colors")
 	}
-	cols = character (N)
+	colors = character (N)
 	for (i in 1:ncontours)
 	{	I = (depth.table [,1] == i)
-		cols.sub = .randomize.color (iso.cols [i], nP [i])
-		cols [I] = cols.sub
+		colors.sub = .randomize.color (iso.colors [i], nP [i])
+		colors [I] = colors.sub
 	}
 
-	if (! missing (base.lines) && ! is.null (base.lines) )
-	{	for (lines in base.lines)
-		{	sbx = (lines [,1] - xlim [1]) / diff (xlim)
-			sby = (lines [,2] - ylim [1]) / diff (ylim)
-			.barsurf.lines (sbx, sby, 0, "#B0B0B0")
+	if (! missing (panel.lines) && ! is.null (panel.lines) )
+	{	for (lines in panel.lines [[1]])
+		{	py = (lines [,1] - ylim [1]) / diff (ylim)
+			pz = (lines [,2] - zlim [1]) / diff (zlim)
+			.barsurf.lines (1, py, pz, "#B0B0B0")
+		}
+		for (lines in panel.lines [[2]])
+		{	px = (lines [,1] - xlim [1]) / diff (xlim)
+			pz = (lines [,2] - zlim [1]) / diff (zlim)
+			.barsurf.lines (px, 1, pz, "#B0B0B0")
+		}
+		for (lines in panel.lines [[3]])
+		{	px = (lines [,1] - xlim [1]) / diff (xlim)
+			py = (lines [,2] - ylim [1]) / diff (ylim)
+			.barsurf.lines (px, py, 0, "#B0B0B0")
 		}
 	}
 
@@ -187,7 +197,7 @@
 		xsub = P [[I]][J, 1]
 		ysub = P [[I]][J, 2]
 		zsub = P [[I]][J, 3]
-		.barsurf.poly (xsub, ysub, zsub, cols [i], lwd, wire.frame.col)
+		.barsurf.poly (xsub, ysub, zsub, colors [i], lwd, wire.frame.color)
 	}
 	par (p0)
 }
@@ -197,19 +207,19 @@ plot_contour_3d = function (x, y, z, fv, fb, ...,
 	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
 	xlim, ylim, zlim,
 	axes=TRUE, arrows=TRUE,
-	ncontours=2, wire.frame.col="#808080", iso.cols)
+	ncontours=2, wire.frame.color="#808080", iso.colors)
 {	.plot_contour_3d (x, y, z, fv, fb, ...,
 		wire.frame=wire.frame,
 		main=main, xlab=xlab, ylab=ylab, xat=xat, yat=yat, xlabs=xlabs, ylabs=ylabs,
 		xlim=xlim, ylim=ylim, zlim=zlim,
 		axes=axes, arrows=arrows,
-		ncontours=ncontours, wire.frame.col=wire.frame.col, iso.cols=iso.cols)
+		ncontours=ncontours, wire.frame.color=wire.frame.color, iso.colors=iso.colors)
 }
 
 plot_cfield_3d = function (x, y, z, fv, fb, ...,
 	contours=TRUE, heatmap=TRUE,
 	main, xlab="x", ylab="y",
-	axes=TRUE,
+	axes=TRUE, reverse.z=FALSE,
 	ncontours=6, emph="n", color.function, color.fit)
 {	nz = length (fv)
 	if (nz < 2)
@@ -235,9 +245,12 @@ plot_cfield_3d = function (x, y, z, fv, fb, ...,
 		z = 1:nz
 	else if (length (z) != nz)
 		stop ("length (z) != length (fv)")
+	zlim = range (z)
+	if (reverse.z)
+		zlim = rev (zlim)
 	x = (x - min (x) ) / diff (range (x) )
 	y = (y - min (y) ) / diff (range (y) )
-	z = (z - min (z) ) / diff (range (z) )
+	z = (z - zlim [1]) / diff (zlim)
 	flim = range (fv, na.rm=TRUE)
 	if (missing (main) )
 		main = ""
@@ -308,8 +321,8 @@ plot_cfield_3d = function (x, y, z, fv, fb, ...,
 	}
 	for (k in 1:nz)
 	{	if (heatmap)
-		{	cols = color.function (w [[k]])
-			.plot.heatmap.2 (nx - 1, ny - 1, x, y, z [k], cols)
+		{	colors = color.function (w [[k]])
+			.plot.heatmap.2 (nx - 1, ny - 1, x, y, z [k], colors)
 		}
 		if (contours && ncontours > 0)
 		{	v = contourLines (x, y, fv [[k]],, fb)
@@ -347,12 +360,12 @@ plot_cfield_3d = function (x, y, z, fv, fb, ...,
 	sqrt ( (P [1] - x)^2 + (P [2] + x)^2)
 }
 
-.plot.heatmap.2 = function (nr, nc, x, y, z, cols)
+.plot.heatmap.2 = function (nr, nc, x, y, z, colors)
 {	for (i in 1:nr)
 	{	for (j in 1:nc)
 		{	xsub = c (x [i], x [i], x [i + 1], x [i + 1])
 			ysub = c (y [j], y [j + 1], y [j + 1], y [j])
-	    		.barsurf.poly.2 (xsub, ysub, c (z, z, z, z), NA, cols [i, j])
+	    		.barsurf.poly.2 (xsub, ysub, c (z, z, z, z), NA, colors [i, j])
 		}
 	}
 }

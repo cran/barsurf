@@ -35,12 +35,14 @@
 \begin{document}
 
 <<echo=false>>=
-options(continue="  ")
+options(continue="   ")
 options(SweaveHooks=list(fig=function()
 par(mar=c(4.1, 4.1, 1.35, 1.6), cex=0.7, cex.main=1)))
+
+set.seed (1)
 @
 
-\stitle {barsurf}{0.4.0}{Heatmap-Related Plots\\and\\Smooth\\Multiband Color Interpolation}
+\stitle {barsurf}{0.5.0}{Heatmap-Related Plots\\and\\Smooth\\Multiband Color Interpolation}
 
 \sabstract {Supports combined contour-heat plots and 3D bar/surface plots, for plotting scalar fields, either discretely-spaced or continuously-spaced. Also, supports matrix visualization (per se), isosurfaces (for scalar fields over three variables), triangular plots and vector fields. All plots use static vector graphics (suitable for Sweave documents), but high resolution heatmaps can produce smooth raster-like visual effects. Contains a flexible system for smooth multiband color interpolation in RGB, HSV and HCL color spaces.}
 
@@ -87,10 +89,9 @@ library (barsurf)
 library (misc3d)
 @
 
-Note that the barsurf package imports the kubik and colorspace packages.\\
-Also (at the time of writing), the kubik package imports the intoo package, however, this is likely to removed in the near future.
+Note that the barsurf package imports the kubik and colorspace packages.
 
-Note that the misc3d package needs to be installed and on the search path, in order to use the functions for 3D contour plots.
+Also, the misc3d package needs to be installed and on the search path, in order to use the functions for 3D contour plots.
 
 <<>>=
 set.bs.options (rendering.style="e", theme="blue")
@@ -114,15 +115,15 @@ Alternatively, the functions \tmu {plotf\_dfield} and \tmu {plotf\_bar} may be u
 
 Let's construct a simple matrix representing the product of two binomial distributions:
 <<>>=
-n = 10
-p = 0.5
+n <- 10
+p <- 0.5
 @
 
 <<>>=
-x = y = 0:10
-f = function (x, y, n, p)
+x <- y <- 0:10
+f <- function (x, y, n, p)
     dbinom (x, n, p) * dbinom (y, n, p)
-fv = outer (x, y, f, n, p)
+fv <- outer (x, y, f, n, p)
 @
 
 Then plot in 2D and 3D:
@@ -177,7 +178,7 @@ Note that in the contour-heat plot, the contour values have been set to zero, an
 
 Also note that the heatmap is not smooth.
 
-We could use a larger n value, or (more efficiently) superimpose a smaller heatmap on top of a larger heatmap.
+We could use a larger n value, or (more efficiently) superimpose a smaller heatmap on top of a larger heatmap, in the area of high curvature. Either way, any improvement is mainly aesthetic.
 
 There's an example in an appendix.
 
@@ -196,12 +197,14 @@ By default, the plotted fv matrix has the same orientation as a matrix in text f
 Here's a simple example:
 
 <<>>=
-M = matrix (sample (1:50), 5, 10)
+M <- matrix (sample (1:50), 5, 10)
 @
 
 \begin {center}
 <<fig=TRUE, width=4.75, height=3>>=
-plot_matrix (,,M)
+p0 <- matrix.margins ()
+plot_matrix (,,M, bin.labels=TRUE)
+par (p0)
 @
 \end {center}
 
@@ -224,7 +227,7 @@ Unlike previous plotting functions, the fv argument is a three dimensional array
 
 The first two variables have the same interpretation as other 3D plots in this package, with the third variable giving the height. Except that x, y and z describe coordinates of the fv array, not the resulting isosurfaces.
 
-Also, its possible for the the x, y, z, fv and n arguments to be lists, one list element for each isosurface.
+Also, it's possible for the the x, y, z, fv and n arguments to be lists, one list element for each isosurface.
 
 The \tmu {bispherical.dist} function gives the smallest of two distances from two points, in 3D space.
 
@@ -233,8 +236,10 @@ The following example plots the \tmu {bispherical.dist} function, giving isosurf
 \begin {center}
 <<fig=TRUE, width=4.75, height=3.75>>=
 nested_isosurfaces (bispherical.dist,
-    c (-3, 3),, c (-2, 2), c (0.5, 1, 1.75),
-    arrows=FALSE)
+    c (-3, 3),, c (-2, 2), fb = c (0.5, 1, 1.75),
+    base.contours=TRUE, rear.contours=TRUE,
+    arrows=FALSE,
+    pconstants = c (1, 1, 0) )
 @
 \end {center}
 
@@ -277,7 +282,7 @@ If you need to plot a function that doesn't have these properties, then you need
 Here's a simple example:
 
 <<>>=
-f = function (w1, w2, w3)
+f <- function (w1, w2, w3)
     (w1 - 1 / 3)^2 + (w2 - 1 / 3)^2 + (w3 - 1 / 3)^2
 @
 
@@ -343,12 +348,12 @@ Colors are determined by color functions, which map logical or numeric vectors t
 For bar plots, the color function maps a logical vector to colors, and for other plots, the color function maps a numeric vector to colors. This package uses a system of ``barface'' objects and ``litmus'' objects to simplify this process, however, you can use any functions that meet these requirements.
 
 <<>>=
-colf = barface.heat ()
+colf <- heat.barface ()
 colf (c (TRUE, FALSE) )
 @
 
 <<>>=
-colf = litmus.heat ()
+colf <- heat.litmus ()
 colf (c (0.25, 0.75) )
 @
 
@@ -371,7 +376,7 @@ By default, colors assumed to be in sRGB color space, however, other color space
 A simple sRGB example:
 
 <<>>=
-colf = barface (c (0, 0, 1) )
+colf <- barface (c (0, 0, 1) )
 @
 
 \begin {center}
@@ -383,7 +388,7 @@ plot (colf)
 And a HCL-based example, specifying both tops and sides:
 
 <<>>=
-colf = barface (c (90, 42.5, 60), c (90, 35, 67.5), "HCL")
+colf <- barface (c (90, 42.5, 60), c (90, 35, 67.5), color.space="HCL")
 @
 
 \begin {center}
@@ -396,10 +401,10 @@ Alternatively, this package has five predefined barface objects, for the heat, g
 
 \begin {center}
 <<fig=TRUE, width=4.75, height=0.8>>=
-plot (barface.blue () )
+plot (blue.barface () )
 @
 <<fig=TRUE, width=4.75, height=0.8>>=
-plot (barface.green () )
+plot (green.barface () )
 @
 \end {center}
 
@@ -416,9 +421,9 @@ The \tmu {litmus.spline} function is the same, except that it takes a vector of 
 A matrix of color vectors:
 
 <<>>=
-colvs = cbind (c (c (100, 150, 200, 250) ), 35, 75)
-rownames (colvs) = c ("first color", "(2nd)", "(3rd)", "last color")
-colnames (colvs) = c ("H", "C", "L")
+colvs <- cbind (c (c (100, 150, 200, 250) ), 35, 75)
+rownames (colvs) <- c ("first color", "(2nd)", "(3rd)", "last color")
+colnames (colvs) <- c ("H", "C", "L")
 @
 
 <<>>=
@@ -431,7 +436,7 @@ Note that its not necessary to set row and column names.\\
 A litmus object, with the default input range:
 
 <<>>=
-colf = litmus (,,colvs, "HCL")
+colf <- litmus (,,colvs, color.space="HCL")
 colf
 @
 
@@ -445,16 +450,16 @@ Alternatively, this package has several predefined litmus objects, for the heat,
 
 \begin {center}
 <<fig=TRUE, width=4.75, height=0.8>>=
-plot (litmus.heat () )
+plot (heat.litmus () )
 @
 <<fig=TRUE, width=4.75, height=0.8>>=
-plot (litmus.blue () )
+plot (blue.litmus () )
 @
 <<fig=TRUE, width=4.75, height=0.8>>=
-plot (litmus.green () )
+plot (green.litmus () )
 @
 <<fig=TRUE, width=4.75, height=0.8>>=
-plot (litmus.rainbow () )
+plot (rainbow.litmus () )
 @
 \end {center}
 
@@ -468,7 +473,7 @@ Multi-litmus objects are litmus-like objects containing other litmus objects.
 The \tmu {mlitmus} function constructs a ``mlitmus'' (multi-litmus) object from one or more litmus objects:
 
 <<>>=
-colf = mlitmus (litmus.green (-1, 0, reverse=TRUE), litmus.blue (0, 1) )
+colf <- mlitmus (blue.litmus (-1, 0, reverse=TRUE), green.litmus (0, 1) )
 @
 
 \begin {center}
@@ -490,16 +495,16 @@ Note that the above example is questionable, and I recommend caution mixing high
 Lets create a less trivial example:
 
 <<>>=
-colf1 = glass.rainbow (0, 1.25, 1, start=-200, end=200)
-colf2 = glass.rainbow (1.25, 1.75, c (1, 0.7, 0.4, 0.1), start=200, end=220)
-colf3 = glass.rainbow (1.75, 5, 0.1, start=220)
+colf1 <- glass.rainbow (0, 1.25, 1, start=-200, end=200)
+colf2 <- glass.rainbow (1.25, 1.75, c (1, 0.7, 0.4, 0.1), start=200, end=220)
+colf3 <- glass.rainbow (1.75, 5, 0.1, start=220)
 @
 
 Note that the third argument is the alpha value.\\
 Other arguments are ranges.
 
 <<>>=
-colf = mlitmus (colf1, colf2, colf3)
+colf <- mlitmus (colf1, colf2, colf3)
 @
 
 Note that if using multi-litmus objects in heatmaps, sudden ``jumps'' may cause artifacts in the plot.
@@ -517,7 +522,7 @@ Also note that this multi-litmus object is semi-transparent, and it's possible t
 Now, I will to recreate the earlier 3D-based contour-heat plot, using different z coordinates, and using the multi-litmus object:
 
 <<>>=
-z = c (-2, -1.6, -1.2, -0.5, -0.1667, 0.1667, 0.5, 1.2, 1.6, 2)
+z <- c (-2, -1.6, -1.2, -0.5, -0.1667, 0.1667, 0.5, 1.2, 1.6, 2)
 @
 
 \begin {center}
@@ -537,15 +542,15 @@ However, if creating color functions for heatmaps, then the color function needs
 We can create a function to fit litmus objects by wrapping the \tmu {litmus.fit} function:
 
 <<>>=
-custom.litmus.fit = function (x)
-{   colvs = cbind (c (c (100, 150, 200, 250) ), 35, 75)
-    litmus.fit (x, colvs, "HCL")
+custom.litmus.fit <- function (x)
+{   colvs <- cbind (c (c (100, 150, 200, 250) ), 35, 75)
+    litmus.fit (x, colvs, color.space="HCL")
 }
 @
 
 Let's say we have a vector, x:
 <<>>=
-x = runif (10)
+x <- runif (10)
 @
 
 We can fit a litmus object using our function:
@@ -556,7 +561,7 @@ custom.litmus.fit (x)
 
 This package contains wrappers for the \tmu {litmus.fit} function, with predefined colors:
 <<>>=
-litmus.blue.fit (x)
+blue.litmus.fit (x)
 @
 
 The \tmu {litmus.fit} function and most of its wrappers have an ``equalize'' parameter.
@@ -564,16 +569,16 @@ The \tmu {litmus.fit} function and most of its wrappers have an ``equalize'' par
 Let say we have function values from a function with high curvature:
 
 <<>>=
-x = y = seq (0, 1,, 30)
-fv = outer (x, y)
-fv = fv^3
+x <- y <- seq (0, 1,, 30)
+fv <- outer (x, y)
+fv <- fv^3
 @
 
 We can create litmus objects with different equalize values:
 
 <<>>=
-colf.simple = litmus.blue.fit (fv, equalize=0)
-colf.equalized = litmus.blue.fit (fv, equalize=1)
+colf.simple <- blue.litmus.fit (fv, equalize=0)
+colf.equalized <- blue.litmus.fit (fv, equalize=1)
 @
 
 With no equalization the resulting litmus object appears relatively even:
@@ -588,7 +593,7 @@ However, in the resulting heatmap, the opposite happens:\\
 (The plot is mostly green).
 
 <<>>=
-fb = c (0.0014, 0.0881)
+fb <- c (0.0014, 0.0881)
 @
 
 \begin {center}
@@ -624,7 +629,7 @@ This results in a softer effect, than the completely equalized example above.
 
 \subsection* {R Packages}
 
-Spurdle, A. (2019). kubik: Cubic Hermite Splines
+Spurdle, A. (2020). kubik: Cubic Hermite Splines and Related Optimization Methods
 
 Ihaka, R., Murrell, P., Hornik, K., Fisher, J. Stauffer, R., Wilke, C., McWhite, C., \&\\Zeileis, A. (2019). colorspace: A Toolbox for Manipulating and Assessing Colors and Palettes
 
@@ -639,9 +644,9 @@ The colorspace package contains further color-related references.
 \section* {Appendix:\\Improved Contour-Heat Plot}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <<>>=
-x = y = seq (-15.5, 15.5, length.out=60)
-fv = outer (x, y, rotated.sinc)
-colf = litmus.blue.fit.hcv (fv)
+x <- y <- seq (-15.5, 15.5, length.out=60)
+fv <- outer (x, y, rotated.sinc)
+colf <- blue.litmus.fit.hcv (fv)
 @
 
 \begin {center}

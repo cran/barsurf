@@ -14,6 +14,11 @@
 .onLoad = function (...)
 	set.bs.options ()
 
+.EXTEND = function (object, class=NULL, ...)
+{	class = c (class, class (object) )
+	structure (object, class=class, ...)
+}
+
 .THAT = function () 
 {	this = sys.function (-1)
 	attributes (this)

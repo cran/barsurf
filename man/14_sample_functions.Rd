@@ -1,4 +1,4 @@
-\name{13_sample_functions}
+\name{14_sample_functions}
 \alias{rotated.sinc}
 \alias{bispherical.dist}
 \alias{concentric.field}
@@ -25,9 +25,9 @@ concentric.field (x, y)
 \item{x, y, z}{Numeric vectors, where the functions are evaluated.}
 }
 \value{
-The theoretically scalar-valued functions return a numeric vector.
+The (theoretically) scalar-valued functions return a numeric vector.
 
-The theoretically vector-valued functions return a list containing two numeric vectors.
+The (theoretically) vector-valued functions return a list containing two numeric vectors.
 }
 \examples{
 rotated.sinc (0, 0)

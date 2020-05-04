@@ -32,38 +32,49 @@ In general, these artifacts are minimal.
 If you want to remove them, possible options are to change your PDF viewer's settings or save the plot in a raster format, such as PNG.
 }
 \usage{
-#list-of-matrices version
+#x-y-fv version
+#(main argument is a list of matrices)
 plot_cfield_3d (x, y, z, fv, fb, \dots,
     contours=TRUE, heatmap=TRUE,
     main, xlab="x", ylab="y",
-    axes=TRUE,
+    axes=TRUE, reverse.z=FALSE,
     ncontours=6, emph="n", color.function, color.fit)
 
 #functional version
+#(which calls the x-y-fv version, above)
 plotf_cfield_3d (f, xlim, ylim=xlim, zlim=xlim, \dots, nslides=6, n=30, z)
 }
 \arguments{
-\item{x, y}{Optional sorted vectors of x and y coordinates, refer to details.}
-\item{z}{Numeric vector of two or more z coordinates, refer to details.}
+\item{x, y}{Optional sorted numeric vectors of x and y coordinates, refer to details.}
+\item{z}{Optional numeric vector of two or more z coordinates, refer to details.}
 \item{fv}{A list of two or more numeric matrices (representing a continuously-spaced scalar fields), one for each z value.}
-\item{fb}{Optional vector of function values (or "levels"), for contours.}
+\item{fb}{Optional numeric vector of function values (or "levels"), for contours.}
 \item{contours}{Logical, include contour lines.}
 \item{heatmap}{Logical, include heatmap.}
-\item{main}{.}
-\item{xlab, ylab}{.}
+\item{main, xlab, ylab}{Strings, main/axes titles.}
 \item{axes}{Logical vector of length one or two, plot reference arrows.}
+\item{reverse.z}{Logical, if true reverse the z axis.}
 \item{ncontours}{Integer, the number of contour lines.\cr Ignored if fb supplied.}
 \item{emph}{What to emphasize, either "n" (for nothing), "b" for both (low and high regions), "l" for low regions or "h" for high regions, or "B", "L" or "H" for the same but with a stronger effect.}
 \item{color.function}{Optional color function, such as a litmus object, refer to details.}
 \item{color.fit}{Optional color fitting function, such as a litmus.fit wrapper, refer to details.}
 \item{f}{A numeric-valued function of three variables (x, y, and z), suitable for use with base::outer, called with four arguments, x, y, f, and z [i].}
-\item{xlim, ylim}{The x and y ranges.}
-\item{zlim}{The z (vertical) range, ignored is z supplied.}
-\item{\dots}{Ignored.}
+\item{xlim, ylim}{Length-2 numeric vectors, the x and y ranges.\cr Currently, these need to be ascending.}
+\item{zlim}{Length-2 numeric vector, the z (vertical) range, ignored is z supplied.}
 \item{nslides}{Integer, giving the number of slides, ignored if z supplied.}
 \item{n}{An integer vector of length one or two, giving the number of grid points.}
+\item{\dots}{In the x-y-fv version, ignored.}
 }
 \examples{
-plotf_cfield_3d (bispherical.dist, c (-3, 3),, c (-2, 2), nslides=6, emph="l")
+plotf_cfield_3d (bispherical.dist, c (-3, 3),, c (-2, 2), emph="l")
 }
 \references{Refer to the vignette for an overview, references and better examples.}
+\seealso{
+Plots of scalar fields over two variables:\cr
+\link{plot_dfield}, \link{plot_cfield}
+
+Other plots of scalar fields over three variables:\cr
+\link{plot_contour_3d}
+
+Other functions:\cr
+\link{litmus}, \link{litmus.fit} }

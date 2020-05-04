@@ -13,13 +13,13 @@ This can be used to plot numeric matrices (here, labelled as fv), and functions 
 
 In these plots, each heatmap bin represents one element from fv.
 
-With the exception of plot_matrix, increasing rows in fv correspond to increasing x values and increasing columns in fv correspond to increasing y values. If an x vector is supplied its length needs to equal the number of rows (exact-match case) or the number of rows plus one (plus-one case). Likewise, if a y vector is supplied its length needs to equal the number of columns or the number of columns plus one. In the exact-match cases, the vectors give the midpoints of bins, and in the plus-one cases, vectors give the breakpoints of bins, including the outermost coordinates.
+Increasing rows in fv correspond to increasing x values and increasing columns in fv correspond to increasing y values. If an x vector is supplied its length needs to equal the number of rows (exact-match case) or the number of rows plus one (plus-one case). Likewise, if a y vector is supplied its length needs to equal the number of columns or the number of columns plus one. In the exact-match cases, the vectors give the midpoints of bins, and in the plus-one cases, vectors give the breakpoints of bins, including the outermost coordinates.
 
-The plot_matrix function calls the plot_dfield function with fv transposed, such that increasing rows in fv correspond to increasing y values and increasing columns in fv correspond to increasing x values. Note that by default, plot_matrix also reverses the y axis, such that increasing y values (increasing rows) go from top to bottom. This means that by default, the resulting plots have the same orientation as standard matrices, in text form.
+By default, the plot_matrix function calls the plot_dfield function with fv transposed, such that increasing rows in fv correspond to increasing y values and increasing columns in fv correspond to increasing x values. Also by default, it reverses the y axis, such that increasing y values (increasing rows) go from top to bottom. This means that the resulting plots have the same orientation as standard matrices, in text form.
 
 Currently, bar plots use a diamond-based projection with a fixed viewing angle, such that the origin is at the bottom center.
 
-With the exception of plot_bar, if none of color.function, color.fit and cols are supplied, then:\cr
+With the exception of plot_bar, if none of color.function, color.fit and colors are supplied, then:\cr
 (1) A color.fit function is determined by global options.\cr
 (2) The color.fit function is used to compute a color.function from fv.\cr
 (3) The color.function is used to compute a color matrix from fv.
@@ -37,72 +37,87 @@ Note that:\cr
 (3) Only opaque color functions should be used in heatmaps, that is, color functions that produce opaque colors with no transparency. However, bar plots may use semitransparent colors.
 }
 \usage{
+#x-y-fv versions
+#(main argument is a matrix)
 plot_dfield (x, y, fv, fb, \dots,
-    grid.lines, contours=TRUE,
-    heatmap=TRUE, contour.labels=FALSE,
+    grid.lines, contours=TRUE, heatmap=TRUE,
+    bin.labels=FALSE, contour.labels=FALSE,
     main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
-    xyrel = test.xyrel (x, y, fv), as.matrix=FALSE,
-    add=FALSE, axes=TRUE, reverse = c (FALSE, as.matrix),
-    ncontours=2, clabs,
-    grid.col, contour.col="#000000",
-    color.function, color.fit, cols, hcv=FALSE)
+    xyrel = test.xyrel (x, y, fv), transpose=FALSE,
+    add=FALSE, axes=TRUE, reverse=FALSE,
+    ncontours=2, clabs, blabs,
+    grid.color, contour.color="#000000",
+    color.function, color.fit, colors, hcv=FALSE)
 
 plot_bar (x, y, fv, \dots,
     main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
     zlim,
     axes=TRUE, arrows=TRUE,
-    color.function, cols)
+    color.function, colors)
 
 plot_matrix (x, y, fv, fb, \dots,
-    grid.lines, contours=FALSE,
-    heatmap=TRUE, contour.labels=FALSE,
+    grid.lines, contours=FALSE, heatmap=TRUE,
+    bin.labels=FALSE, contour.labels=FALSE,
     main, xlab="col", ylab="row", xat, yat, xlabs, ylabs,
-    xyrel = test.xyrel (x, y, fv), as.matrix=TRUE,
-    add=FALSE, axes=TRUE, reverse = c (FALSE, as.matrix),
-    ncontours=2, clabs,
-    grid.col, contour.col="#000000",
-    color.function, color.fit, cols, hcv=TRUE)
+    xyrel = test.xyrel (x, y, fv), transpose=TRUE,
+    add=FALSE, axes=TRUE, reverse = c (FALSE, transpose),
+    ncontours=2, clabs, blabs,
+    grid.color, contour.color="#000000",
+    color.function, color.fit, colors, hcv=TRUE)
 
 #functional versions
+#(which call the x-y-fv versions above)
 plotf_dfield (f, xlim, ylim=xlim, \dots)
 plotf_bar (f, xlim, ylim=xlim, zlim, \dots)
 }
 \arguments{
-\item{x, y}{Optional sorted vectors of x and y midpoints or breakpoints, refer to details.}
+\item{x, y}{Optional sorted numeric vectors of x and y midpoints or breakpoints, refer to details.}
 \item{fv}{A numeric matrix (representing a discretely-spaced scalar field), which may include NAs.}
-\item{fb}{Optional vector of function values (or "levels"), for contours.}
-\item{grid.lines}{Logical, include grid lines. Defaults to true, if is.matrix is true and both the number of rows and columns don't exceed 20.}
+\item{fb}{Optional numeric vector of function values (or "levels"), for contours.}
+\item{grid.lines}{Logical, include grid lines.\cr Defaults to true, if is.matrix is true and both the number of rows and columns don't exceed 20.}
 \item{contours}{Logical, include contour lines.}
 \item{heatmap}{Logical, include heatmap.}
+\item{bin.labels}{Logical, include bin labels.}
 \item{contour.labels}{Logical, include contour labels.}
-\item{main}{.}
-\item{xlab, ylab}{.}
-\item{xat, yat}{The x and y axes tick points.}
-\item{xlabs, ylabs}{The x and y axes tick labels.\cr In 3D plots, ignored unless axes is true and arrows is false.}
+\item{main, xlab, ylab}{Optional strings, main/axes titles.}
+\item{xat, yat}{Optional numeric vectors, the x and y axes tick points.}
+\item{xlabs, ylabs}{Optional character vectors, the x and y axes tick labels.\cr In 3D plots, ignored unless axes is true and arrows is false.}
 \item{xyrel}{Single character, either "f", "s" or "m". "f" produces a plot with a fixed aspect ratio of one, "s" produces a square plot, and "m" a maximized plot.}
-\item{as.matrix}{Logical, plot fv with the same orientation as a textual representation of a matrix. Note that the overall result depends on the value of reverse.}
+\item{transpose}{Logical, if true transpose fv.\cr Note that x, y, etc have the same interpretation, regardless of whether the matrix is tranposed or not.\cr (i.e. x values always apply to values on the horizontal axis).}
 \item{add}{Logical, if true add contours/heatmap to an existing plot.}
 \item{axes}{Logical vector of length one or two, if true plot reference arrows or axis ticks with labels.}
 \item{arrows}{Logical vector of length one or two, (subject to axes, above) if true, plot reference arrows, if false, use axis ticks with labels.}
-\item{reverse}{Logical vector of one or two, to reverse the x and y axes.}
+\item{reverse}{Logical vector of one or two, to reverse the x and y axes.\cr Note that this argument could change.}
 \item{ncontours}{Integer, the number of contour lines.\cr Ignored if fb supplied.}
 \item{clabs}{Optional character vector of contour labels.}
-\item{grid.col}{String, giving the grid line color.}
-\item{contour.col}{Character vector of length one or with the same length as the number of contours, giving the contour line colors.}
+\item{blabs}{Optional character matrix of bin labels.\cr Defaults to the values of fv.}
+\item{grid.color}{String, giving the grid line color.}
+\item{contour.color}{Character vector of length one or with the same length as the number of contours, giving the contour line colors.}
 \item{color.function}{Optional color function, such as a barface object (for plot_bar) or an opaque litmus object (for the other plots), refer to details.}
 \item{color.fit}{Optional color fitting function, such as a litmus.fit wrapper, refer to details.}
-\item{cols}{Optional character matrix of R colors, for the heatmap bins. For plot_bar, this may also be a list with two matrices, one for tops and one for sides.}
+\item{colors}{Optional character matrix of R colors, for the heatmap bins. For plot_bar, this may also be a list with two matrices, one for tops and one for sides.}
 \item{hcv}{Logical, use the high color variation option.}
 \item{f}{A numeric-valued function of two variables (x and y), suitable for use with base::outer.}
-\item{xlim, ylim}{The x and y ranges.}
-\item{zlim}{The vertical range, corresponding to the value of the function or matrix.}
-\item{\dots}{Ignored.}
+\item{xlim, ylim}{Length-2 numeric vectors, the x and y ranges.\cr Currently, these need to be ascending.}
+\item{zlim}{Length length-2 numeric vector, the vertical range, corresponding to the value of the function or matrix.}
+\item{\dots}{In the x-y-fv versions ignored.}
 }
 \examples{
-fv = matrix (sample (1:100), 10, 10)
+fv <- matrix (sample (1:100), 10, 10)
 
 plot_dfield (,,fv)
 plot_bar (,,fv)
 plot_matrix (,,fv)
 }
 \references{Refer to the vignette for an overview, references and better examples.}
+\seealso{
+Continuously-spaced versions:\cr
+\link{plot_cfield}
+
+Plots of scalar fields over three variables:\cr
+\link{plot_contour_3d}, \link{plot_cfield_3d}
+
+Other functions:\cr
+\link{barface}, \link{litmus}, \link{litmus.fit}
+
+\link{test.xyrel} }

@@ -21,9 +21,9 @@ The plot method calls colorspace::swatchplot, with a vector of colors.
 }
 \arguments{
 \item{x}{A barface, litmus or mlitmus object.}
-\item{n}{Number of strips.}
+\item{n}{Integer, number of strips.}
 \item{\dots}{Ignored.}
 }
 \examples{
-plot (barface.heat () )
+plot (heat.barface () )
 }

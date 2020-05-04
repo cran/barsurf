@@ -50,49 +50,49 @@ set.bs.options = function (..., rendering.style="r", theme="blue")
 	bso$theme = theme
 	bso$rendering.style = rendering.style
 	if (theme == "heat")
-	{	bso$soft.line.col = "#804040"
-		bso$barface = "barface.heat"
-		bso$litmus.fit = "litmus.heat.fit"
-		bso$litmus.fit.hcv = "litmus.heat.fit.hcv"
+	{	bso$soft.line.color = "#804040"
+		bso$barface = "heat.barface"
+		bso$litmus.fit = "heat.litmus.fit"
+		bso$litmus.fit.hcv = "heat.litmus.fit"
 		bso$litmus.fit.glass = "glass.rainbow.fit"
-		bso$litmus.fit.flow = "litmus.heat.fit"
-		bso$litmus.fit.lum = "litmus.heat.fit.lum"
+		bso$litmus.fit.flow = "heat.litmus.fit"
+		bso$litmus.fit.lum = "heat.litmus.fit.lum"
 	}
 	else if (theme == "gold")
-	{	bso$soft.line.col = "#D0D000"
-		bso$barface = "barface.gold"
-		bso$litmus.fit = "litmus.blue.fit"
-		bso$litmus.fit.hcv = "litmus.blue.fit.hcv"
+	{	bso$soft.line.color = "#D0D000"
+		bso$barface = "gold.barface"
+		bso$litmus.fit = "blue.litmus.fit"
+		bso$litmus.fit.hcv = "blue.litmus.fit.hcv"
 		bso$litmus.fit.glass = "glass.rainbow.fit"
-		bso$litmus.fit.flow = "litmus.blue.fit.flow"
-		bso$litmus.fit.lum = "litmus.gold.fit.lum"
+		bso$litmus.fit.flow = "blue.litmus.fit.flow"
+		bso$litmus.fit.lum = "gold.litmus.fit.lum"
 	}
 	else if (theme == "blue")
-	{	bso$soft.line.col = "#707088"
-		bso$barface = "barface.blue"
-		bso$litmus.fit = "litmus.blue.fit"
-		bso$litmus.fit.hcv = "litmus.blue.fit.hcv"
+	{	bso$soft.line.color = "#707088"
+		bso$barface = "blue.barface"
+		bso$litmus.fit = "blue.litmus.fit"
+		bso$litmus.fit.hcv = "blue.litmus.fit.hcv"
 		bso$litmus.fit.glass = "glass.rainbow.fit"
-		bso$litmus.fit.flow = "litmus.blue.fit.flow"
-		bso$litmus.fit.lum = "litmus.blue.fit.lum"
+		bso$litmus.fit.flow = "blue.litmus.fit.flow"
+		bso$litmus.fit.lum = "blue.litmus.fit.lum"
 	}
 	else if (theme == "green")
-	{	bso$soft.line.col = "#608060"
-		bso$barface = "barface.green"
-		bso$litmus.fit = "litmus.green.fit"
-		bso$litmus.fit.hcv = "litmus.green.fit.hcv"
+	{	bso$soft.line.color = "#608060"
+		bso$barface = "green.barface"
+		bso$litmus.fit = "green.litmus.fit"
+		bso$litmus.fit.hcv = "green.litmus.fit.hcv"
 		bso$litmus.fit.glass = "glass.rainbow.fit"
-		bso$litmus.fit.flow = "litmus.green.fit.flow"
-		bso$litmus.fit.lum = "litmus.green.fit.lum"
+		bso$litmus.fit.flow = "green.litmus.fit.flow"
+		bso$litmus.fit.lum = "green.litmus.fit.lum"
 	}
 	else if (theme == "purple")
-	{	bso$soft.line.col = "#685068"
-		bso$barface = "barface.purple"
-		bso$litmus.fit = "litmus.blue.fit"
-		bso$litmus.fit.hcv = "litmus.blue.fit.hcv"
+	{	bso$soft.line.color = "#685068"
+		bso$barface = "purple.barface"
+		bso$litmus.fit = "blue.litmus.fit"
+		bso$litmus.fit.hcv = "blue.litmus.fit.hcv"
 		bso$litmus.fit.glass = "glass.rainbow.fit"
-		bso$litmus.fit.flow = "litmus.blue.fit.flow"
-		bso$litmus.fit.lum = "litmus.purple.fit.lum"
+		bso$litmus.fit.flow = "blue.litmus.fit.flow"
+		bso$litmus.fit.lum = "purple.litmus.fit.lum"
 	}
 	else
 		stop ("unsupported theme")
@@ -103,6 +103,12 @@ set.bs.theme = function (theme)
 {	rs = getOption ("barsurf")$rendering.style
 	set.bs.options (rendering.style=rs, theme=theme)
 }
+
+rgb2hsv = function (colv)
+	coords (as (sRGB (colv [1], colv [2], colv [3]), "HSV") )
+
+hsv2rgb = function (colv)
+	coords (as (HSV (colv [1], colv [2], colv [3]), "sRGB") )
 
 rgb2hcl = function (colv)
 	coords (as (sRGB (colv [1], colv [2], colv [3]), "polarLUV") )[3:1]

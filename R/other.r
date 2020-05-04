@@ -27,18 +27,15 @@
 
 .intseq = function (n, a, b)
 {	x = seq (a, b, length.out=n)
-	as.integer (x)
+	as.integer (round (x) )
 }
 
 .outer.3 = function (f, n, x, y, z)
-{	fv = array (0, n)
-	for (i in 1:n [1])
-	{	for (j in 1:n [2])
-		{	for (k in 1:n [3])
-				fv [i, j, k] = f (x [i], y [j], z [k])
-		}
-	}
-	fv
+{	x2 = rep (x, times = n [2] * n [3])
+	y2 = rep (y, each = n [1], times = n [3])
+	z2 = rep (z, each = n [1] * n [2])
+	fv = f (x2, y2, z2)
+	array (fv, n)
 }
 
 .outer.xy = function (x, y, f)
@@ -56,29 +53,28 @@
 	list (fx=x, fy=y)
 }
 
+matrix.margins = function ()
+{	mar = par ("mar")
+	par (mar = mar [c (3, 2, 1, 4) ])
+}
+		
 #deprecated functions
-.plot = function (f, x, y, fv, ..., d3=FALSE, contrast, xat, yat, xlabs, ylabs)
-{	if (inherits (fv, "P.nmatrix") )
-		fv = fv$x
-	if (d3)
-	{	with.labs = (! missing (xat) || ! missing (yat) || ! missing (xlabs) || ! missing (ylabs) )
-		if (with.labs)
-			f (x, y, fv, ..., arrows=FALSE, xat=xat, yat=yat, xlabs=xlabs, ylabs=ylabs)
-		else
-			f (x, y, fv, ...)
-	}
-	else
-		f (x, y, fv, ..., xyrel="s")
+.plot = function (f, x, y, fv, ..., contrast, d3=FALSE)
+{	if (d3) f (x, y, fv, ...)
+	else f (x, y, fv, ..., xyrel="s")
 }
 .use.theme = function (theme="blue") set.bs.theme (theme)
 use.theme = function (...) .use.theme (...)
-plot2d.cell = function (...) .plot (plot_dfield, ...)
-plot3d.bar = function (...) .plot (plot_bar, ..., d3=TRUE)
 plot2d.contour = function (...) .plot (plot_cfield, ...)
+plot3d.bar = function (...) .plot (plot_bar, ..., d3=TRUE)
 plot3d.surface = function (...) .plot (plot_surface, ..., d3=TRUE)
-plot2d.tricontour = function (...) .plot (plot_tricontour, ...)
-plot3d.trisurface = function (...) .plot (plot_trisurface, ..., d3=TRUE)
-.temp.par = function (..., zlim, contrast) par (...)
+litmus.rainbow.fit = function (...) rainbow.litmus.fit (...)
+.extract.cols = function (..., cols)
+{	if (missing (cols) )
+		NULL
+	else
+		cols
+}
 
 #functional versions
 .plotf_dfield = function (f, g, xlim, ylim, ...)
@@ -117,11 +113,24 @@ plotf_tricontour = function (f, ..., n=30)
 plotf_trisurface = function (f, ..., n=30)
 	.plotf_tricontour (plot_trisurface, f, n, ...)
 
-.plotf_contour_3d = function (f, xlim, ylim, zlim, fb, base.contours, n, ..., ncontours=2)
-{	if (! missing (fb) )
+.panel.contours = function (x, y, fv, fb)
+{	cl = contourLines (x, y, fv,, fb)
+	ncl = length (cl)
+	pc = vector ("list", ncl)
+	for (i in seq_len (ncl) )
+		pc [[i]] = cbind (cl [[i]]$x, cl [[i]]$y)
+	pc
+}
+
+.plotf_contour_3d = function (f, xlim, ylim, zlim, n, ...,
+	base.contours=FALSE, rear.contours=FALSE, pconstants, maximal=FALSE,
+	ncontours=2, fb)
+{	if (missing (fb) )
+	{	if (ncontours == 0)
+			stop ("ncontours == 0")
+	}
+	else
 		ncontours = length (fb)
-	if (ncontours == 0)
-		stop ("ncontours == 0")
 	if (is.list (n) )
 	{	N = length (n)
 		if (N != ncontours)
@@ -140,62 +149,91 @@ plotf_trisurface = function (f, ..., n=30)
 		z [[i]] = seq (zlim [1], zlim [2], length.out = n [[i]][3])
 		fv [[i]] = .outer.3 (f, n [[i]], x [[i]], y [[i]], z [[i]])
 	}
-	if (base.contours)
-	{	bx = seq (xlim [1], xlim [2], length.out=40)
-		by = seq (ylim [1], ylim [2], length.out=40)
-		bz = seq (zlim [1], zlim [2], length.out=20)
-		fv.2 = .outer.3 (f, c (40, 40, 20), bx, by, bz)
-		fv.2 = apply (fv.2, 1:2, min)
-	
-		if (missing (fb) )
-		{	N = ncontours + 2
-			flim = range (fv, na.rm=TRUE)
-			fb = seq (flim [1], flim [2], length.out=N)[- c (1, N)]
+	if (missing (fb) )
+	{	N = ncontours + 2
+		flim = range (fv, na.rm=TRUE)
+		fb = seq (flim [1], flim [2], length.out=N)[-c (1, N)]
+		if (maximal)
+			fb = rev (fb)
+	}
+	if (base.contours || rear.contours)
+	{	if (missing (pconstants) )
+		{	pconstants = numeric (3)
+			pconstants [1] = mean (xlim)
+			pconstants [2] = mean (ylim)
+			pconstants [3] = mean (zlim)
 		}
-	
-		bl = contourLines (bx, by, fv.2,, fb)
-		for (i in 1:length (bl) )
-			bl [[i]] = cbind (bl [[i]]$x, bl [[i]]$y)
+		else if (length (pconstants) != 3)
+			stop ("length (pconstants) != 3")
+
+		pc = vector ("list", 3)
+		px = seq (min (xlim), max (xlim), length.out=40)
+		py = seq (min (ylim), max (ylim), length.out=40)
+		pz = seq (min (zlim), max (zlim), length.out=40)
+		if (base.contours)
+		{	fv.xy = outer (px, py, f, pconstants [3])
+			pc [[3]] = .panel.contours (px, py, fv.xy, fb)
+		}
+		if (rear.contours)
+		{	f.yz = function (y, z, f, x) f (x, y, z)
+			fv.yz = outer (py, pz, f.yz, f, pconstants [1])
+			pc [[1]] = .panel.contours (py, pz, fv.yz, fb)
+
+			f.xz = function (x, z, f, y) f (x, y, z)
+			fv.xz = outer (px, pz, f.xz, f, pconstants [2])
+			pc [[2]] = .panel.contours (px, pz, fv.xz, fb)
+		}
 	}
 	else
-		bl = NULL
-	.plot_contour_3d (x, y, z, fv, xlim=xlim, ylim=ylim, zlim=zlim, ncontours=ncontours, fb=fb, base.lines=bl, ...)
+		pc = NULL
+	.plot_contour_3d (x, y, z, fv, xlim=xlim, ylim=ylim, zlim=zlim, panel.lines=pc, fb=fb, ...)
 }
 
-.nested_isosurfaces = function (f, xlim, ylim, zlim, fb, base.contours, n, m, ..., ncontours=2)
-{	if (! missing (fb) )
+.nested_isosurfaces = function (f, xlim, ylim, zlim, nfirst, nlast, ..., ncontours=2, fb)
+{	if (missing (fb) )
+	{	if (ncontours == 0)
+			stop ("ncontours == 0")
+	}
+	else
 		ncontours = length (fb)
-	if (ncontours < 2)
-		stop ("needs >= 2 contours")
-	n = .trpl (n)
-	m = .trpl (m)
-	nx = .intseq (ncontours, n [1], m [1])
-	ny = .intseq (ncontours, n [2], m [2])
-	nz = .intseq (ncontours, n [3], m [3])
+	nfirst = .trpl (nfirst)
+	nlast = .trpl (nlast)
+	nx = .intseq (ncontours, nfirst [1], nlast [1])
+	ny = .intseq (ncontours, nfirst [2], nlast [2])
+	nz = .intseq (ncontours, nfirst [3], nlast [3])
 	n = vector ("list", ncontours)
 	for (i in 1:ncontours)
 		n [[i]] = c (nx [i], ny [i], nz [i])
-	.plotf_contour_3d (f, xlim, ylim, zlim, fb, base.contours, n, ..., ncontours=ncontours)
+	.plotf_contour_3d (f, xlim, ylim, zlim, n, ..., ncontours=ncontours, fb=fb)
 }
 
-plotf_contour_3d = function (f, xlim, ylim=xlim, zlim=xlim, fb, ..., base.contours=TRUE, n=20)
-	.plotf_contour_3d (f, xlim, ylim, zlim, fb, base.contours, n, ...)
+plotf_contour_3d = function (f, xlim, ylim=xlim, zlim=xlim, ..., n=20, maximal=FALSE,
+	base.contours=FALSE, rear.contours=FALSE, pconstants)
+{	.plotf_contour_3d (f, xlim, ylim, zlim, n, ...,
+		base.contours=base.contours, rear.contours=rear.contours, pconstants=pconstants, maximal=maximal)
+}
 
-nested_isosurfaces = function (f, xlim, ylim=xlim, zlim=xlim, fb, ..., base.contours=TRUE, nfirst=30, nlast=15)
-	.nested_isosurfaces (f, xlim, ylim, zlim, fb, base.contours, nfirst, nlast, ...)
+nested_isosurfaces = function (f, xlim, ylim=xlim, zlim=xlim, ..., nfirst=30, nlast=15)
+	.nested_isosurfaces (f, xlim, ylim, zlim, nfirst, nlast, ...)
 
 plotf_cfield_3d = function (f, xlim, ylim=xlim, zlim=xlim, ..., nslides=6, n=30, z)
 {	n = .dbl (n)
 	x = seq (xlim [1], xlim [2], length.out = n [1])
 	y = seq (ylim [1], ylim [2], length.out = n [2])
 	if (missing (z) )
-		z = seq (zlim [1], zlim [2], length.out = nslides)
+		z = seq (zlim [1], zlim [2], length.out = nslides)	
 	else
 		nslides = length (z)
 	fv = vector ("list", nslides)
 	for (i in 1:nslides)
 		fv [[i]] = outer (x, y, f, z [i])
-	plot_cfield_3d (x, y, z, fv, ...)
+	.plot_cfield_3d.rev (x, y, z, fv, ..., zrng = diff (zlim) )
+}
+
+.plot_cfield_3d.rev = function (x, y, z, fv, ..., zrng, reverse.z)
+{	if (missing (reverse.z) )
+		reverse.z = (zrng < 0)
+	plot_cfield_3d (x, y, z, fv, ..., reverse.z=reverse.z)
 }
 
 plotf_vecfield = function (f, xlim, ylim=xlim, ..., nv=20, nh=40)

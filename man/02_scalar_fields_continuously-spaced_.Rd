@@ -37,20 +37,22 @@ Note that:\cr
 Expanding on point (3), functions that are constant in theory, may product non-constant (but near-constant) values when computed via floating point arithmetic.
 }
 \usage{
+#x-y-fv versions
+#(main argument is a matrix)
 plot_cfield (x, y, fv, fb, \dots,
     contours=TRUE, heatmap=TRUE, contour.labels=FALSE,
-    main, xlab="x", ylab="y",
+    main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
     xyrel = test.xyrel (x, y, fv),
     add=FALSE, axes=TRUE, reverse=FALSE,
     ncontours=6, clabs,
-    contour.col="#000000",
+    contour.color="#000000",
     color.function, color.fit, hcv=FALSE)
 
 plot_surface (x, y, fv, \dots,
     grid.lines=TRUE,
     main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
     zlim, axes=TRUE, arrows=TRUE,
-    grid.col, color.function, color.fit)
+    grid.color, color.function, color.fit)
 
 plot_tricontour (x, y, fv, fb, \dots,
     contours=TRUE, heatmap=TRUE, contour.labels=FALSE,
@@ -58,56 +60,67 @@ plot_tricontour (x, y, fv, fb, \dots,
     xyrel="s",
     axes=TRUE,
     ncontours=6, clabs,
-    contour.col="#000000",
+    contour.color="#000000",
     color.function, color.fit, hcv=FALSE)
 
 plot_trisurface (x, y, fv, \dots,
     grid.lines=TRUE,
     main, xlab="x", ylab="y",
     zlim, axes=TRUE, arrows=TRUE,
-    grid.col, color.function, color.fit)
+    grid.color, color.function, color.fit)
 
 #functional versions
+#(which call the x-y-fv versions above)
 plotf_cfield (f, xlim, ylim=xlim, \dots, n=30)
 plotf_surface (f, xlim, ylim=xlim, zlim, \dots, n=30)
 plotf_tricontour (f, \dots, n=30)
 plotf_trisurface (f, \dots, n=30)
 }
 \arguments{
-\item{x, y}{Optional sorted vectors of x and y coordinates, refer to details.\cr In the triangular case, ignored.}
+\item{x, y}{Optional sorted numeric vectors of x and y coordinates, refer to details.\cr In the triangular case, ignored.}
 \item{fv}{A numeric matrix (representing a continuously-spaced scalar field), which may not include NAs.\cr In the triangular case, fv needs to be a square matrix, but only the top-left triangle is used, including the diagonal.}
-\item{fb}{Optional vector of function values (or "levels"), for contours.}
+\item{fb}{Optional numeric vector of function values (or "levels"), for contours.}
 \item{grid.lines}{Logical, include grid lines.}
 \item{contours}{Logical, include contour lines.}
 \item{heatmap}{Logical, include heatmap.}
 \item{contour.labels}{Logical, include contour labels.}
-\item{main}{.}
-\item{xlab, ylab}{.}
-\item{xat, yat}{The x and y axes tick points.}
-\item{xlabs, ylabs}{The x and y axes tick labels.\cr In 3D plots, ignored unless axes is true and arrows is false.}
+\item{main, xlab, ylab}{Optional strings, main/axes titles.}
+\item{xat, yat}{Optional numeric vectors, the x and y axes tick points.}
+\item{xlabs, ylabs}{Optional character vectors, the x and y axes tick labels.\cr In 3D plots, ignored unless axes is true and arrows is false.}
 \item{xyrel}{Single character, either "f", "s" or "m". "f" produces a plot with a fixed aspect ratio of one, "s" produces a square plot, and "m" a maximized plot.}
 \item{add}{Logical, if true add contours/heatmap to an existing plot.}
 \item{axes}{Logical vector of length one or two, if true plot reference arrows or axis ticks with labels.}
 \item{arrows}{Logical vector of length one or two, (subject to axes, above) if true, plot reference arrows, if false, use axis ticks with labels.}
-\item{reverse}{Logical vector of one or two, to reverse the x and y axes.}
+\item{reverse}{Logical vector of one or two, to reverse the x and y axes.\cr Note that this argument could change.}
 \item{ncontours}{Integer, the number of contour lines.\cr Ignored if fb supplied.}
 \item{clabs}{Optional character vector of contour labels.}
-\item{grid.col}{String, giving the grid line color.}
-\item{contour.col}{Character vector of length one or with the same length as the number of contours, giving the contour line colors.}
+\item{grid.color}{String, giving the grid line color.}
+\item{contour.color}{Character vector of length one or with the same length as the number of contours, giving the contour line colors.}
 \item{color.function}{Optional color function, such as an arbitrary litmus object (for plot_surface) or an opaque litmus object (for the other plots), refer to details.}
 \item{color.fit}{Optional color fitting function, such as a litmus.fit wrapper, refer to details.}
 \item{hcv}{Logical, use the high color variation option, refer to details.}
 \item{f}{In the rectangular case, a numeric-valued function of two variables (x and y), suitable for use with base::outer.\cr In the triangular case, a similar function, but of three variables (w1, w2, w3) or (x, y and z) etc, with values between zero and one, which in general, sum to one.}
-\item{xlim, ylim}{The x and y ranges.}
-\item{zlim}{The vertical range, corresponding to the value of the function.}
-\item{\dots}{Ignored.}
+\item{xlim, ylim}{Length-2 numeric vectors, the x and y ranges.\cr Currently, these need to be ascending.}
+\item{zlim}{Length-2 numeric vector, the vertical range, corresponding to the value of the function or matrix.}
 \item{n}{An integer vector of length one or two, giving the number of grid points.}
+\item{\dots}{In the x-y-fv versions, ignored.}
 }
 \examples{
-x = y = seq (-15.5, 15.5, length.out=40)
-fv = outer (x, y, rotated.sinc)
+x <- y <- seq (-15.5, 15.5, length.out=40)
+fv <- outer (x, y, rotated.sinc)
 
 plot_cfield (,,fv)
 plot_surface (,,fv)
 }
 \references{Refer to the vignette for an overview, references and better examples.}
+\seealso{
+Discretely-spaced versions:\cr
+\link{plot_dfield}
+
+Plots of scalar fields over three variables:\cr
+\link{plot_contour_3d}, \link{plot_cfield_3d}
+
+Other functions:\cr
+\link{litmus}, \link{litmus.fit}
+
+\link{test.xyrel} }

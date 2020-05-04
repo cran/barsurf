@@ -28,7 +28,7 @@
 
 plot_bar = function (x, y, fv, ...,
 	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
-	zlim, axes=TRUE, arrows=TRUE, color.function, cols)
+	zlim, axes=TRUE, arrows=TRUE, color.function, colors)
 {	nx = nrow (fv)
 	ny = ncol (fv)
 	axes = .dbl (axes)
@@ -61,21 +61,21 @@ plot_bar = function (x, y, fv, ...,
 	if (with.ylabs)
 		.barsurf.ylabs (yaxis [[1]], substring (yaxis [[2]], 1, 6) )
 
-	if (missing (cols) )
+	if (missing (colors) )
 	{	if (missing (color.function) )
 		{	bf = getOption ("barsurf")$barface
 			bf = eval (str2lang (bf) )
 			color.function = bf ()
 		}
-		cols.t = matrix (color.function (TRUE), nx, ny)
-		cols.f = matrix (color.function (FALSE), nx, ny)
+		colors.t = matrix (color.function (TRUE), nx, ny)
+		colors.f = matrix (color.function (FALSE), nx, ny)
 	}
 	else
-	{	if (is.matrix (cols) )
-			cols.t = cols.f = cols
+	{	if (is.matrix (colors) )
+			colors.t = colors.f = colors
 		else
-		{	cols.t = cols [[1]]
-			cols.f = cols [[2]]
+		{	colors.t = colors [[1]]
+			colors.f = colors [[2]]
 		}
 	}
 
@@ -84,7 +84,7 @@ plot_bar = function (x, y, fv, ...,
     		{	if (is.na (fv [i, j]) )
 				NULL
 			else
-				.barsurf.bar (xb [i], xb [i + 1], yb [j], yb [j + 1], fv [i, j], cols.t [i, j], cols.f [i, j])
+				.barsurf.bar (xb [i], xb [i + 1], yb [j], yb [j + 1], fv [i, j], colors.t [i, j], colors.f [i, j])
 		}
 	}
     par (p0)
@@ -93,7 +93,7 @@ plot_bar = function (x, y, fv, ...,
 plot_surface = function (x, y, fv, ...,
 	grid.lines=TRUE,
 	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
-	zlim, axes=TRUE, arrows=TRUE, grid.col, color.function, color.fit)
+	zlim, axes=TRUE, arrows=TRUE, grid.color, color.function, color.fit)
 {	nx = nrow (fv)
 	ny = ncol (fv)
 	axes = .dbl (axes)
@@ -115,7 +115,11 @@ plot_surface = function (x, y, fv, ...,
 
 	w = matrix (0, nrow = nx - 1, ncol = ny - 1)
 	if (.is.const (zlim, fv) )
-		fv [] = 0.5
+	{	if (missing (zlim) )
+			fv [] = 0.5
+		else
+			fv = (fv - zlim [1]) / diff (zlim)
+	}
 	else
 	{	if (missing (zlim) )
 			zlim = range (fv)
@@ -141,7 +145,7 @@ plot_surface = function (x, y, fv, ...,
 	if (axes [2] && ! arrows [2])
 		.surface.axes ("y", y, yat, ylabs)
 
-	v = .line.attr (grid.lines, grid.col)
+	v = .line.attr (grid.lines, grid.color)
 	if (missing (color.function) )
 	{	if (missing (color.fit) )
 		{	color.fit = getOption ("barsurf")$litmus.fit.lum
@@ -149,13 +153,13 @@ plot_surface = function (x, y, fv, ...,
 		}
 		color.function = color.fit (w)
 	}
-	cols = color.function (w)
+	colors = color.function (w)
 	for (i in (nx - 1):1)
 	{	for (j in (ny - 1):1)
 		{	xsub = c (xs [i], xs [i], xs [i + 1], xs [i + 1])
 			ysub = c (ys [j], ys [j + 1], ys [j + 1], ys [j])
 			fsub = c (fv [i, j], fv [i, j + 1], fv [i + 1, j + 1], fv [i + 1, j])
-			.barsurf.poly (xsub, ysub, fsub, cols [i, j], v [[1]], v [[2]])
+			.barsurf.poly (xsub, ysub, fsub, colors [i, j], v [[1]], v [[2]])
 		}
 	}
 	par (p0)
@@ -164,7 +168,7 @@ plot_surface = function (x, y, fv, ...,
 plot_trisurface = function (x, y, fv, ...,
 	grid.lines=TRUE,
 	main, xlab="x", ylab="y",
-	zlim, axes=TRUE, arrows=TRUE, grid.col, color.function, color.fit)
+	zlim, axes=TRUE, arrows=TRUE, grid.color, color.function, color.fit)
 {	n = .test.fv (fv)
 	axes = .dbl (axes)
 	arrows = .dbl (arrows)
@@ -174,7 +178,11 @@ plot_trisurface = function (x, y, fv, ...,
 
 	w1 = w2 = matrix (0, nrow = n - 1, ncol = n - 1)
 	if (.is.const (zlim, fv) )
-		fv [] = 0.5
+	{	if (missing (zlim) )
+			fv [] = 0.5
+		else
+			fv = (fv - zlim [1]) / diff (zlim)
+	}
 	else
 	{	if (missing (zlim) )
 			zlim = range (fv, na.rm=TRUE)
@@ -199,7 +207,7 @@ plot_trisurface = function (x, y, fv, ...,
 		}
 	}
 
-	p0 = .temp.par (mar=c (1, 0.2, 1, 0.2) )
+	p0 = par (mar=c (1, 0.2, 1, 0.2) )
 	plot.new ()
 	plot.window (c (-0.75, 0.75), c (0, 1.5) )
 	.barsurf.frame (axes [1] && arrows [1], axes [2] && arrows [2])
@@ -210,7 +218,7 @@ plot_trisurface = function (x, y, fv, ...,
 	if (axes [2] && ! arrows [2])
 		.trisurface.axes ("y", y)
 
-	v = .line.attr (grid.lines, grid.col)
+	v = .line.attr (grid.lines, grid.color)
 	if (missing (color.function) )
 	{	if (missing (color.fit) )
 		{	color.fit = getOption ("barsurf")$litmus.fit.lum
@@ -218,22 +226,22 @@ plot_trisurface = function (x, y, fv, ...,
 		}
 		color.function = color.fit (c (w1, w2) )
 	}
-	cols1 = color.function (w1)
-	cols2 = color.function (w2)
+	colors1 = color.function (w1)
+	colors2 = color.function (w2)
 	for (i in (n - 1):1)
 	{	for (j in (n - i):1)
 		{	if (i < n - 1 && j < n - i)
 			{	xsub = c (x [i], x [i + 1], x [i + 1])
 				ysub = c (y [j + 1], y [j], y [j + 1])
 				fsub = c (fv [i, j + 1], fv [i + 1, j], fv [i + 1, j + 1])
-				colstr = cols1 [i, j]
-				.barsurf.poly (xsub, ysub, fsub, colstr, v [[1]], v [[2]])
+				colorstr = colors1 [i, j]
+				.barsurf.poly (xsub, ysub, fsub, colorstr, v [[1]], v [[2]])
 			}	
 			xsub = c (x [i], x [i], x [i + 1])
 			ysub = c (y [j], y [j + 1], y [j])
 			fsub = c (fv [i, j], fv [i, j + 1], fv [i + 1, j])
-			colstr = cols1 [i, j]
-			.barsurf.poly (xsub, ysub, fsub, colstr, v [[1]], v [[2]])
+			colorstr = colors1 [i, j]
+			.barsurf.poly (xsub, ysub, fsub, colorstr, v [[1]], v [[2]])
 		}
 	}
 	par (p0)
@@ -257,24 +265,24 @@ plot_trisurface = function (x, y, fv, ...,
 	(dw < abs (meanw) / 1000)
 }
 
-.line.attr = function (grid.lines, grid.color, iso=FALSE)
+.line.attr = function (grid.lines, grid.coloror, iso=FALSE)
 {	rs = getOption ("barsurf")$rendering.style
 	line.width = 1
 	if (grid.lines)
-	{	if (missing (grid.color) )
+	{	if (missing (grid.coloror) )
 		{	if (rs == "p")
-				grid.color = "#000000"
+				grid.coloror = "#000000"
 			else if (iso)
-				grid.color = "#404040"
+				grid.coloror = "#404040"
 			else
-				grid.color = getOption ("barsurf")$soft.line.col
+				grid.coloror = getOption ("barsurf")$soft.line.color
 		}
 		if (rs == "e")
 			line.width = 0.125
 	}
 	else
-		grid.color = NA
-	list (line.width, grid.color)
+		grid.coloror = NA
+	list (line.width, grid.coloror)
 }
 
 .surface.axes = function (which, x, xat, xlabs)

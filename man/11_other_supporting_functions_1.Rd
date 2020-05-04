@@ -22,12 +22,12 @@ test.xyrel (x, y, fv)
 }
 \arguments{
 \item{x, y}{Optional numeric vectors.}
-\item{fv}{A matrix.}
+\item{fv}{A numeric matrix.}
 }
 \value{
 Refer to details.
 }
 \examples{
-fv = matrix (1:20, 2, 10)
+fv <- matrix (1:20, 2, 10)
 test.xyrel (,,fv)
 }

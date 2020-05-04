@@ -1,7 +1,7 @@
 Package: barsurf
 Title: Heatmap-Related Plots and Smooth Multiband Color Interpolation
-Version: 0.4.0
-Date: 2020-02-14
+Version: 0.5.0
+Date: 2020-05-04
 License: GPL (>= 2)
 Maintainer: Abby Spurdle <spurdle.a@gmail.com>
 Author: Abby Spurdle
@@ -11,6 +11,6 @@ Depends: methods
 Imports: kubik, colorspace
 Suggests: intoo, vectools, misc3d, Matrix
 NeedsCompilation: no
-Packaged: 2020-02-13 19:37:41 UTC; spurdle
+Packaged: 2020-05-03 23:30:28 UTC; spurdle
 Repository: CRAN
-Date/Publication: 2020-02-13 23:00:02 UTC
+Date/Publication: 2020-05-04 05:20:27 UTC
