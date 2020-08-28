@@ -1,11 +1,11 @@
-\name{12_other_supporting_functions_2}
+\name{62_matrix_plot_margins}
 \alias{matrix.margins}
 \title{Matrix Margins}
-\description{Reverse the bottom and top margins.}
+\description{Reverse the top and bottom margins.}
 \details{
 The function changes the par settings for the margins, for subsequent plots.
 
-It reverses the bottom and top margins, based on the assumption that the user wants the x-axis ticks/labels on the top, and a possible main title on the bottom.
+It reverses the top and bottom margins, based on the assumption that the user wants the x-axis ticks/labels on the top, and a possible main title on the bottom.
 }
 \usage{
 matrix.margins ()
@@ -17,6 +17,6 @@ A named list giving the original par settings for the margins.
 fv <- matrix (sample (1:24), 4, 6)
 
 p0 <- matrix.margins ()
-plot_matrix (,,fv)
+plot_matrix (,,fv, main="my plot")
 par (p0)
 }

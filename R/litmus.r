@@ -1,4 +1,4 @@
-#barsurf: Heatmap-Related Plots and Smooth Multiband Color Interpolation
+#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
 #Copyright (C), Abby Spurdle, 2020
 
 #This program is distributed without any warranty.
@@ -24,7 +24,9 @@
 
 .constf2 = function (color.space, colvs, na.color)
 {	colv = rbind (apply (colvs, 2, median) )
-	v = .mapcol (color.space, colv)
+	colv = map.color (colv, from=color.space, to="sRGB", correction=TRUE)
+	if (length (colv) == 3) colstr = rgb (colv [1], colv [2], colv [3])
+	else colstr = rgb (colv [1], colv [2], colv [3], colv [4])
 	f = function (x)
 	{	. = .THAT ()
 		cols = rep (.$col, length (x) )
@@ -32,29 +34,7 @@
 		dim (cols) = dim (x)
 		cols
 	}
-	.EXTEND (f,, col = .colstr (v [[1]], v [[2]]), na.color=na.color)
-}
-
-barface = function (coltv, colfv, ..., color.space="sRGB")
-{	v = .mapcol (color.space, rbind (coltv) )
-	with.alpha = v [[1]]
-	coltv = v [[2]]
-	if (missing (colfv) )
-		colfv = (coltv + 0.999) / 2
-	else
-	{	v = .mapcol (color.space, rbind (colfv) )
-		if (with.alpha != v [[1]])
-			stop ("color vectors different lengths")
-		colfv = v [[2]]
-	}
-	f = function (x)
-	{	. = .THAT ()
-		cols = rep (.$colf, length (x) )
-		cols [x] = .$colt
-		dim (cols) = dim (x)
-		cols
-	}
-	.EXTEND (f, "barface", colt = .colstr (with.alpha, coltv), colf = .colstr (with.alpha, colfv) )
+	.EXTEND (f,, col=colstr, na.color=na.color)
 }
 
 .linear.interp = function (cx1, cx2, cy1, cy2)
@@ -78,16 +58,21 @@ litmus.spline = function (cx, colvs, ..., color.space="sRGB", na.color="#FFFFFF"
 		stop ("needs 2 or more knots")
 	if (n != nrow (colvs) )
 		stop ("n != nrow (cols)")
-	v = .mapcol (color.space, colvs)
-	with.alpha = v [[1]]
-	colvs = v [[2]]
-	if (with.alpha)
-	{	f = .litmus.eval.4
-		fa = .litmus.ext (n, cx, colvs [,4])
+	. = .valx (cx, xname="x")
+	if (.$xtype == "-")
+	{	cx = rev (.$x)
+		colvs = colvs [n:1,]
 	}
-	else
+	colvs = map.color (colvs, from=color.space, to="sRGB", correction=TRUE)
+	colvs [colvs < 0.001] = 0.001
+	colvs [colvs > 0.999] = 0.999
+	if (ncol (colvs) == 3)
 	{	f = .litmus.eval.3
 		fa = NULL
+	}
+	else
+	{	f = .litmus.eval.4
+		fa = .litmus.ext (n, cx, colvs [,4])
 	}
 	.EXTEND (f, "litmus",
 		a = min (cx), b = max (cx),
@@ -192,9 +177,6 @@ litmus.fit = function (x, colvs, ..., color.space="sRGB", reverse=FALSE, equaliz
 	}
 }
 
-print.barface = function (x, ...)
-	cat ("barface object\n")
-
 print.litmus = function (x, ...)
 {	. = attributes (x)
 	cat ("litmus object, x in [", .$a, ", ", .$b, "]\n", sep="")
@@ -203,14 +185,6 @@ print.litmus = function (x, ...)
 print.mlitmus = function (x, ...)
 {	. = attributes (x)
 	cat ("mlitmus object, x in [", min (.$a), ", ", max (.$b), "]\n", sep="")
-}
-
-plot.barface = function (x, ...)
-{	f = x
-
-	p0 = par (mar = c (0.1, 0.1, 0.1, 0.1) )
-	swatchplot (c (f (TRUE), f (FALSE) ), sborder="#080808", border="#080808", off=0)
-	par (p0)
 }
 
 plot.litmus = function (x, n=200, ...)

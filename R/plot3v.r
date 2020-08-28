@@ -1,4 +1,4 @@
-#barsurf: Heatmap-Related Plots and Smooth Multiband Color Interpolation
+#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
 #Copyright (C), Abby Spurdle, 2020
 
 #This program is distributed without any warranty.
@@ -11,120 +11,97 @@
 #Also, this license should be available at:
 #https://cran.r-project.org/web/licenses/GPL-2
 
-.iso.var = function (label, I, ncontours, fv, x, is.array)
-{	n = integer (ncontours)
-	for (i in 1:ncontours)
-		n [i] = dim (fv [[i]])[I]
-	if (missing (x) )
-	{	if (is.array)
-			x = 1:(n [1])
+.nsurfaces = function (nsurfaces, fb, fq)
+{	if (missing (fb) )
+	{	if (missing (fq) )
+			n = as.integer (nsurfaces)
 		else
-			stop ("x, y and z required if fv list")
-		rep (list (x), ncontours)
+			n = length (as.numeric (fq) )
 	}
 	else
-	{	if (is.list (x) )
-		{	N = length (x)
-			if (N == ncontours)
-			{	for (i in 1:ncontours)
-				{	if (is.vector (x [[i]]) )
-					{	if (length (x [[i]]) != n [i])
-							stop (sprintf ("length (%s [[%s]]) != dim (fv [[%i]])[%s]", label, I, i, I) )
-					}
-					else
-						stop ("x, y and z need to be vectors or lists of vectors")
-				}
-			}
-			else
-				stop (sprintf ("if %s list, but length (%s) != ncontours", label, label) )		
-		}
-		else if (is.vector (x) )
-		{	if (is.array)
-			{	if (length (x) != n [1])
-					stop (sprintf ("length (%s) != dim (fv)[%s]", label, I) )
-			}
-			else
-			{	for (i in 1:ncontours)
-				{	if (length (x) != n [i])
-						stop (sprintf ("length (%s) != dim (fv [[%s]])[%s]", label, i, I) )
-				}
-			}
-			x = rep (list (x), ncontours)
-
-		}
-		else
-			stop ("x, y and z need to be vectors or lists of vectors")
-	}
-	x
+		n = length (as.numeric (fb) )
+	if (n == 0)
+		stop ("nsurfaces == 0")
+	n
 }
 
-.plot_contour_3d = function (x, y, z, fv, fb, ...,
-	wire.frame=FALSE,
-	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
-	xlim, ylim, zlim,
-	axes=TRUE, arrows=TRUE,
-	panel.lines,
-	ncontours=2, wire.frame.color="#808080", iso.colors)
+.init.contours =  function (nsurfaces, fb, fq, fv, nested, maximal)
 {	if (missing (fb) )
-	{	if (ncontours == 0)
-			stop ("ncontours == 0")
-		N = ncontours + 2
-		flim = range (fv, na.rm=TRUE)
-		fb = seq (flim [1], flim [2], length.out=N)[-c (1, N)]
+	{	if (missing (fq) )
+		{	if (nested)
+			{	if (nsurfaces == 1) fq = 0.05
+				else if (nsurfaces == 2) fq = c (0.025, 0.1275)
+				else if (nsurfaces == 3) fq = c (0.0125, 0.075, 0.275)
+				else stop ("fb or fq needed, if nsurfaces > 3")
+	
+				if (missing (maximal) )
+					maximal = .is.maximal (fv)
+				if (maximal)
+					fq = 1 - fq
+			}
+			else
+			{	if (nsurfaces == 1) fq = 0.5
+				else if (nsurfaces == 2) fq = c (0.45, 0.55)
+				else if (nsurfaces == 3) fq = c (0.4, 0.5, 0.6)
+				else stop ("fb or fq needed, if nsurfaces > 3")
+			}
+		}
+		else
+			fq = as.numeric (fq)
+		fb = as.vector (quantile (unlist (fv), fq, na.rm=TRUE) )
+		
 	}
 	else
-		ncontours = length (fb)
+		fb = as.numeric (fb)
+	fb
+}
 
-	is.array = FALSE
-	if (is.array (fv) )
-	{	is.array = TRUE
-		.val.iso.array (fv)
-		fv = rep (list (fv), ncontours)
-	}
-	else if (is.list (fv) )
-	{	if (ncontours != length (fv) )
-			stop ("fv list, but length (fv) != ncontours")
-		for (fg in fv)
-			.val.iso.array (fg)
-	}
-	else
-		stop ("fv needs to be array or list of arrays")
-	x = .iso.var ("x", 1, ncontours, fv, x, is.array)
-	y = .iso.var ("y", 2, ncontours, fv, y, is.array)
-	z = .iso.var ("z", 3, ncontours, fv, z, is.array)
+plot_isosurface = function (x, y, z, fv, ..., fb, fq,
+	main="", xlab="x", ylab="y", zlab="z",
+	wire.frame=FALSE, texture=TRUE,
+	axes=TRUE, z.axis = all (axes),
+	ref.arrows = opt.ref.arrows (), z.ref.arrow = any (ref.arrows),
+	reverse=FALSE, z.reverse=FALSE,
+	nsurfaces=2,
+	nested=TRUE, maximal,
+	xat, yat, xlabs, ylabs,
+	nhl = opt.nhl (),
+	wire.color="#808080", iso.colors = opt.iso.colors () )
+{	n = 0
 
-	if (ncontours == 1)
-		primary = 1
-	else if (ncontours == 2)
-	{	s1 = sum (dim (fv [[1]]) )
-		s2 = sum (dim (fv [[2]]) )
-		primary = which.max (c (s1, s2) )
-	}
-	else
-		primary = ceiling (ncontours / 2)
+	axes = .dbl (axes)
+	ref.arrows = .dbl (ref.arrows)
+	reverse = .dbl (reverse)
 
-	xlim = .val.xlim (xlim, ncontours, x)
-	ylim = .val.xlim (ylim, ncontours, y)
-	zlim = .val.xlim (zlim, ncontours, z)
-	xs = ys = zs = vector ("list", ncontours)
-	for (i in 1:ncontours)
-	{	xs [[i]] = (x [[i]] - xlim [1]) / diff (xlim)
-		ys [[i]] = (y [[i]] - ylim [1]) / diff (ylim)
-		zs [[i]] = (z [[i]] - zlim [1]) / diff (zlim)
-	}
+	nsurfaces = .nsurfaces (nsurfaces, fb, fq)
+	iso.colors = rep_len (iso.colors, nsurfaces)
 
-	P = vector ("list", ncontours)
-	nP = integer (ncontours)
-	for (i in 1:ncontours)
-	{	P [[i]] = misc3d::computeContour3d (fv [[i]], max (fv [[i]]), fb [i], xs [[i]], ys [[i]], zs [[i]])
+	.UNPACK (.iso.val (x, y, z, fv, nsurfaces) )
+	xlim = .val.xlim (nsurfaces, x, reverse [1])
+	ylim = .val.xlim (nsurfaces, y, reverse [2])
+	zlim = .val.xlim (nsurfaces, z, z.reverse)
+
+	if (axes [1] && ! ref.arrows [1]) .UNPACK (.axis.val (xlim, xat, xlabs, xname="x") )
+	if (axes [2] && ! ref.arrows [2]) .UNPACK (.axis.val (ylim, yat, ylabs, xname="y") )
+	.UNPACK (.axis.scale.iso (x, xat, nsurfaces, xlim) )
+	.UNPACK (.axis.scale.iso (y, yat, nsurfaces, ylim) )
+	.UNPACK (.axis.scale.iso (z, 0, nsurfaces, zlim) )
+
+	fb = .init.contours (nsurfaces, fb, fq, fv [[1]], nested, maximal)
+
+	P = vector ("list", nsurfaces)
+	nP = integer (nsurfaces)
+	for (i in 1:nsurfaces)
+	{	P [[i]] = misc3d::computeContour3d (fv [[i]], max (fv [[i]]), fb [i], x [[i]], y [[i]], z [[i]])
 		nP [i] = as.integer (round (nrow (P [[i]]) / 3) )
 	}
+
 	I = 1
 	N = sum (nP)
 	if (N == 0)
 		stop ("no isosurfaces detected")
 	depth.table = matrix (0L, N, 3)
-	for (i in 1:ncontours)
+	for (i in 1:nsurfaces)
 	{	for (j in seq_len (nP [i]) )
 		{	depth.table [I, 1] = i
 			depth.table [I, 2] = j
@@ -136,42 +113,35 @@
 	K = order (depth.table [,3], decreasing=TRUE)
 	depth.table = depth.table [K,]
 
-	axes = .dbl (axes)
-	arrows = .dbl (arrows)
-	if (missing (main) )
-		main = ""
-
-	p0 = par (mar=c (1, 0.2, 1, 0.2) )
+	p0 = .mar3 (nhl)
 	plot.new ()
 	plot.window (c (-0.75, 0.75), c (0, 1.5) )
-	.barsurf.frame (axes [1] && arrows [1], axes [2] && arrows [2])
+	.barsurf.frame (axes [1] && ref.arrows [1], axes [2] && ref.arrows [2], reverse [1], reverse [2])
 	title (main)
 	.barsurf.labs (xlab, ylab)
-	if (axes [1] && ! arrows [1])
-		.surface.axes ("x", xlim, xat, xlabs)
-	if (axes [2] && ! arrows [2])
-		.surface.axes ("y", ylim, yat, ylabs)
+	if (axes [1] && ! ref.arrows [1]) .barsurf.xlabs (xat, xlabs)
+	if (axes [2] && ! ref.arrows [2]) .barsurf.ylabs (yat, ylabs)
+	if (z.axis) .z.axis (zlab, zlim, z.ref.arrow)
 
-	v = .line.attr (wire.frame, wire.frame.color)
-	lwd = v [[1]]
-	wire.frame.color = v [[2]]
-	if (missing (iso.colors) )
-	{	iso.colors = c ("#DDA06060", "#0040FF20", "#80FF0016")
-		if (ncontours == 1)
-			iso.colors = iso.colors [2]
-		else if (ncontours == 2 || ncontours ==3)
-			iso.colors = iso.colors [1:ncontours]
-		else
-			stop ("for > 3 isosurfaces, please specify their colors")
-	}
+	line.width = .fine.line.width ()
+	if (! wire.frame)
+		wire.color = NA
 	colors = character (N)
-	for (i in 1:ncontours)
-	{	I = (depth.table [,1] == i)
-		colors.sub = .randomize.color (iso.colors [i], nP [i])
-		colors [I] = colors.sub
+	if (texture)
+	{	for (i in 1:nsurfaces)
+		{	I = (depth.table [,1] == i)
+			colors [I] = .randomize.color (iso.colors [i], nP [i], nsurfaces)
+		}
+	}
+	else
+	{	for (i in 1:nsurfaces)
+		{	I = (depth.table [,1] == i)
+			colors [I] = iso.colors [i]
+		}
 	}
 
-	if (! missing (panel.lines) && ! is.null (panel.lines) )
+	panel.lines = .extract.private.args (...)$panel.lines
+	if (! is.null (panel.lines) )
 	{	for (lines in panel.lines [[1]])
 		{	py = (lines [,1] - ylim [1]) / diff (ylim)
 			pz = (lines [,2] - zlim [1]) / diff (zlim)
@@ -197,64 +167,60 @@
 		xsub = P [[I]][J, 1]
 		ysub = P [[I]][J, 2]
 		zsub = P [[I]][J, 3]
-		.barsurf.poly (xsub, ysub, zsub, colors [i], lwd, wire.frame.color)
+		.barsurf.poly (xsub, ysub, zsub, colors [i], line.width, wire.color)
 	}
 	par (p0)
+	.catchargs (...)
 }
 
-plot_contour_3d = function (x, y, z, fv, fb, ...,
-	wire.frame=FALSE,
-	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
-	xlim, ylim, zlim,
-	axes=TRUE, arrows=TRUE,
-	ncontours=2, wire.frame.color="#808080", iso.colors)
-{	.plot_contour_3d (x, y, z, fv, fb, ...,
-		wire.frame=wire.frame,
-		main=main, xlab=xlab, ylab=ylab, xat=xat, yat=yat, xlabs=xlabs, ylabs=ylabs,
-		xlim=xlim, ylim=ylim, zlim=zlim,
-		axes=axes, arrows=arrows,
-		ncontours=ncontours, wire.frame.color=wire.frame.color, iso.colors=iso.colors)
-}
-
-plot_cfield_3d = function (x, y, z, fv, fb, ...,
+plot_cfield3 = function (x, y, z, fv, ..., fb,
+	main="", xlab="x", ylab="y", zlab="z",
 	contours=TRUE, heatmap=TRUE,
-	main, xlab="x", ylab="y",
-	axes=TRUE, reverse.z=FALSE,
-	ncontours=6, emph="n", color.function, color.fit)
-{	nz = length (fv)
-	if (nz < 2)
-		stop ("need 2 or more slices")
-	nx = nrow (fv [[1]])
-	ny = ncol (fv [[2]])
-	axes = .dbl (axes)
-	for (i in 1:nz)
-	{	if (nx != nrow (fv [[i]]) || ny != ncol (fv [[i]]) )
-			stop ("all fv matrices need to be same size")
-	}
-	if (nx < 2 || ny < 2)
-		stop ("nrow (fv) or ncol (fv) < 2")
-	if (missing (x) )
-		x = 1:nx
-	else if (length (x) != nx)
-		stop ("length (x) != nrow (fv)")
-	if (missing (y) )
-		y = 1:ny
-	else if (length (y) != ny)
-		stop ("length (y) != ncol (fv)")
-	if (missing (z) )
-		z = 1:nz
-	else if (length (z) != nz)
-		stop ("length (z) != length (fv)")
-	zlim = range (z)
-	if (reverse.z)
-		zlim = rev (zlim)
-	x = (x - min (x) ) / diff (range (x) )
-	y = (y - min (y) ) / diff (range (y) )
-	z = (z - zlim [1]) / diff (zlim)
-	flim = range (fv, na.rm=TRUE)
-	if (missing (main) )
-		main = ""
+	axes=TRUE, ref.arrows = opt.ref.arrows (),
+	slide.labels = any (axes),
+	reverse=FALSE, z.reverse=FALSE,
+	ncontours=6, emph="n",
+	xat, yat, xlabs, ylabs, zlabs,
+	nhl = opt.nhl (),
+	colf, colff)
+{	axes = .dbl (axes)
+	reverse = .dbl (reverse)
+	ref.arrows = .dbl (ref.arrows)
 
+	nx = ny = nz = ztype = 0
+	.UNPACK (.val.cf3d (x, y, z, fv, reverse) )
+
+	if (axes [1] && ! ref.arrows [1]) .UNPACK (.axis.val (x, xat, xlabs) )
+	if (axes [2] && ! ref.arrows [2]) .UNPACK (.axis.val (y, yat, ylabs) )
+	.UNPACK (.axis.scale (x, xat, reverse [1]) )
+	.UNPACK (.axis.scale (y, yat, reverse [2]) )
+
+	if (slide.labels)
+	{	if (missing (zlabs) )
+			zlabs = signif (z, 3)
+		else if (length (zlabs) == nz)
+			zlabs = zlabs [I]
+		else
+			stop ("length (zlabs) != number of slides")
+	}
+	else
+		zlabs = character (nz)
+
+	.UNPACK (.axis.scale (z) )
+
+	if (ztype != "+")
+	{	I = order (z)
+		fv = fv [I]
+		z = z [I]
+		zlabs = zlabs [I]
+	}
+	if (z.reverse)
+	{	fv = rev (fv)
+		z = 1 - rev (z)
+		zlabs = rev (zlabs)
+	}
+
+	flim = range (unlist (fv), na.rm=TRUE)
 	if (missing (fb) )
 	{	if (contours)
 		{	N = ncontours + 2
@@ -264,42 +230,17 @@ plot_cfield_3d = function (x, y, z, fv, fb, ...,
 	else
 		ncontours = length (fv)
 
-	p0 = par (mar=c (1, 0.2, 1, 0.2) )
+	p0 = .mar3 (nhl)
 	plot.new ()
 	plot.window (c (-0.75, 0.75), c (0, 1.5) )
-	.barsurf.plane.xy.2 (axes [1], axes [2])
+	.barsurf.frame (axes [1] && ref.arrows [1], axes [2] && ref.arrows [2], reverse [1], reverse [2], TRUE)
 	title (main)
-	.barsurf.labs.2 (xlab, ylab)
+	.barsurf.labs (xlab, ylab, TRUE)
+	if (axes [1] && ! ref.arrows [1]) .barsurf.xlabs (xat, xlabs, TRUE)
+	if (axes [2] && ! ref.arrows [2]) .barsurf.ylabs (yat, ylabs, TRUE)
 
 	if (heatmap)
-	{	if (emph == "n")
-			alpha = 0.3
-		else if (emph == "b")
-		{	k = seq (-1, 1, length.out=10)
-			alpha = k ^ 2
-		}
-		else if (emph == "l")
-		{	k = seq (-1, 0, length.out=10)
-			alpha = k ^ 2
-		}
-		else if (emph == "h")
-		{	k = seq (0, 1, length.out=10)
-			alpha = k ^ 2
-		}
-		else if (emph == "B")
-		{	k = seq (-1, 1, length.out=10)
-			alpha = k ^ 4
-		}
-		else if (emph == "L")
-		{	k = seq (-1, 0, length.out=10)
-			alpha = k ^ 4
-		}
-		else if (emph == "H")
-		{	k = seq (0, 1, length.out=10)
-			alpha = k ^ 4
-		}
-		else
-			stop ("emph not in {n, b, l, h, B, L, H}")
+	{	alpha = .alpha.glass (emph)
 
 		w = vector ("list", nz)
 		for (k in 1:nz)
@@ -311,13 +252,7 @@ plot_cfield_3d = function (x, y, z, fv, fb, ...,
 				}
 			}
 		}
-		if (missing (color.function) )
-		{	if (missing (color.fit) )
-			{	color.fit = getOption ("barsurf")$litmus.fit.glass
-				color.fit = eval (str2lang (color.fit) )
-			}
-			color.function = color.fit (unlist (w), alpha)
-		}
+		color.function = .ST (colf, colff, unlist (w), NULL, "glass", alpha=alpha)
 	}
 	for (k in 1:nz)
 	{	if (heatmap)
@@ -330,34 +265,71 @@ plot_cfield_3d = function (x, y, z, fv, fb, ...,
 				.barsurf.lines.2 (p$x, p$y, z [k], "#00000080")
 		}
 		.barsurf.poly.2 (c (0, 0, 1, 1), c (0, 1, 1, 0), z [k], "#00000080", NA)
+		xy = .project.2 (0, 1, z [k])
+		if (slide.labels)
+			text (xy [1], xy [2] + 0.05, zlabs [k], adj = c (0, 0.5) )
 	}
+	xy = .project.2 (0, 1, 1)
+	text (xy [1], xy [2] + 0.15, zlab, adj = c (0, 0.5) )
 	par (p0)
-}
-
-.val.iso.array = function (fv)
-{	if (is.array (fv) )
-	{	if (any (dim (fv) < 6) )
-			stop ("all dim (fv) of dim (fv [[i]]) need to be >= 6")
-	}
-	else
-		stop ("fv needs to be array or list of arrays")
-}
-
-.val.xlim = function (xlim, ncontours, x)
-{	if (missing (xlim) )
-	{	xlim = matrix (0, ncontours, 2)
-		for (i in 1:ncontours)
-			xlim [i,] = range (x [[i]])
-		s = xlim [,1] - xlim [,2]
-		xlim = xlim [which.max (s),] 
-	}
-	xlim
+	.catchargs (...)
 }
 
 .compute.depth = function (P)
 {	P = apply (P, 2, mean)
 	x = (P [1] - P [2]) / 2
 	sqrt ( (P [1] - x)^2 + (P [2] + x)^2)
+}
+
+.randomize.color = function (col, n=1, ncontours)
+{	x = as.vector (col2rgb (col, TRUE) )
+	if (ncontours == 1) err = 25
+	else if (ncontours == 2) err = 50
+	else err = 87.5
+	r = .rc.ext (x [1], n, err)
+	g = .rc.ext (x [2], n, err)
+	b = .rc.ext (x [3], n, err)
+	a = .rc.ext (x [4], n, 25)
+	rgb (r, g, b, a, maxColorValue=255)
+}
+
+.rc.ext = function (x, n, err=110)
+{	x = x + runif (n, -err, err)
+	x [x < 0] = 0
+	x [x > 255] = 255
+	x
+}
+
+.alpha.glass = function (emph)
+{	if (emph == "n")
+		alpha = 0.3
+	else if (emph == "b")
+	{	k = seq (-1, 1, length.out=10)
+		alpha = k ^ 2
+	}
+	else if (emph == "l")
+	{	k = seq (-1, 0, length.out=10)
+		alpha = k ^ 2
+	}
+	else if (emph == "h")
+	{	k = seq (0, 1, length.out=10)
+		alpha = k ^ 2
+	}
+	else if (emph == "B")
+	{	k = seq (-1, 1, length.out=10)
+		alpha = k ^ 4
+	}
+	else if (emph == "L")
+	{	k = seq (-1, 0, length.out=10)
+		alpha = k ^ 4
+	}
+	else if (emph == "H")
+	{	k = seq (0, 1, length.out=10)
+		alpha = k ^ 4
+	}
+	else
+		stop ("emph not in {n, b, l, h, B, L, H}")
+	alpha
 }
 
 .plot.heatmap.2 = function (nr, nc, x, y, z, colors)
@@ -368,20 +340,4 @@ plot_cfield_3d = function (x, y, z, fv, fb, ...,
 	    		.barsurf.poly.2 (xsub, ysub, c (z, z, z, z), NA, colors [i, j])
 		}
 	}
-}
-
-.randomize.color = function (col, n=1)
-{	x = as.vector (col2rgb (col, TRUE) )
-	r = .rc.ext (x [1], n)
-	g = .rc.ext (x [2], n)
-	b = .rc.ext (x [3], n)
-	a = .rc.ext (x [4], n, 25)
-	rgb (r, g, b, a, maxColorValue=255)
-}
-
-.rc.ext = function (x, n, err=110)
-{	x = x + runif (n, -err, err)
-	x [x < 0] = 0
-	x [x > 255] = 255
-	x
 }

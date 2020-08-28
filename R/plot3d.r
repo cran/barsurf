@@ -1,4 +1,4 @@
-#barsurf: Heatmap-Related Plots and Smooth Multiband Color Interpolation
+#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
 #Copyright (C), Abby Spurdle, 2020
 
 #This program is distributed without any warranty.
@@ -11,71 +11,62 @@
 #Also, this license should be available at:
 #https://cran.r-project.org/web/licenses/GPL-2
 
-.axis.val.3d = function (with.xlabs, label, nx, rnames, xat, xlabs, x)
-{	xaxis = .axis.val ("x", nx, rnames, xat, xlabs, x, with.xlabs)
-	xb = xaxis [[3]]
-	xlim = range (xb)
-	xb = (xb - xlim [1]) / diff (xlim)
-	if (with.xlabs)
-	{	if (missing (xat) )
-			xat = xaxis [[1]]
-		xat = (xat - xlim [1]) / diff (xlim)
-		list (xat, xaxis [[2]], xb)
-	}
-	else
-		list (0, 0, xb)
-}
-
 plot_bar = function (x, y, fv, ...,
-	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
-	zlim, axes=TRUE, arrows=TRUE, color.function, colors)
-{	nx = nrow (fv)
-	ny = ncol (fv)
+	main="", xlab="x", ylab="y", zlab="z",
+	axes=TRUE, z.axis=FALSE,
+	ref.arrows = opt.ref.arrows (), reverse=FALSE,
+	continuous.axes=FALSE,
+	zlim, xat, yat, xlabs, ylabs,
+	nhl = opt.nhl (),
+	top.color = opt.top.color (), side.color = opt.side.color () )
+{	args = .extract.private.args (...)
+	if (! is.null (args$arrows) )
+		ref.arrows = args$arrows
+
 	axes = .dbl (axes)
-	arrows = .dbl (arrows)
-	with.xlabs = (axes [1] && ! arrows [1])
-	with.ylabs = (axes [2] && ! arrows [2])
-	xaxis = .axis.val.3d (with.xlabs, "x", nx, rownames (fv), xat, xlabs, x)
-	yaxis = .axis.val.3d (with.ylabs, "y", ny, colnames (fv), yat, ylabs, y)
-	xb = xaxis [[3]]
-	yb = yaxis [[3]]
+	reverse = .dbl (reverse)
+	ref.arrows = .dbl (ref.arrows)
+	continuous.axes = .dbl (continuous.axes)
+
+	nx = ny = xb = yb = 0
+	.UNPACK (.val.xy (x, y, fv, TRUE, reverse=reverse) )
+
+	if (axes [1] && ! ref.arrows [1]) .UNPACK (.axis.val (x, xat, xlabs, continuous.axes [1], names = rownames (fv) ) )
+	if (axes [2] && ! ref.arrows [2]) .UNPACK (.axis.val (y, yat, ylabs, continuous.axes [2], names = colnames (fv) ) )
+	.UNPACK (.axis.scale (xb, xat, reverse [1], nx) )
+	.UNPACK (.axis.scale (yb, yat, reverse [2], ny) )
+
 	if (missing (zlim) )
 		zlim = range (fv, na.rm=TRUE)
 	dfv = diff (zlim)
-	if (dfv == 0)
-		fv [] = 0.5
-	else
-	    fv = (fv - zlim [1]) / dfv
-	if (missing (main) )
-		main = ""
+	if (dfv == 0) fv [] = 0.5
+	else fv = (fv - zlim [1]) / dfv
 
-	p0 = par (mar=c (1, 0.2, 1, 0.2) )
+	p0 = .mar3 (nhl)
 	plot.new ()
 	plot.window (c (-0.75, 0.75), c (0, 1.5) )
-	.barsurf.frame (axes [1] && arrows [1], axes [2] && arrows [2])
+	.barsurf.frame (axes [1] && ref.arrows [1], axes [2] && ref.arrows [2], reverse [1], reverse [2])
 	title (main)
 	.barsurf.labs (xlab, ylab)
+	if (axes [1] && ! ref.arrows [1]) .barsurf.xlabs (xat, xlabs)
+	if (axes [2] && ! ref.arrows [2]) .barsurf.ylabs (yat, ylabs)
+	if (z.axis) .z.axis (zlab, zlim)
 
-	if (with.xlabs)
-		.barsurf.xlabs (xaxis [[1]], substring (xaxis [[2]], 1, 6) )
-	if (with.ylabs)
-		.barsurf.ylabs (yaxis [[1]], substring (yaxis [[2]], 1, 6) )
-
-	if (missing (colors) )
-	{	if (missing (color.function) )
-		{	bf = getOption ("barsurf")$barface
-			bf = eval (str2lang (bf) )
-			color.function = bf ()
-		}
-		colors.t = matrix (color.function (TRUE), nx, ny)
-		colors.f = matrix (color.function (FALSE), nx, ny)
+	args.cols = .extract.private.args (...)$cols
+	if (is.null (args.cols) )
+	{	if (length (top.color) == 1) top.color = matrix (top.color, nx, ny)
+		if (length (side.color) == 1) side.color = matrix (side.color, nx, ny)
+		if (! (is.matrix (top.color) && nrow (top.color) == nx && ncol (top.color) == ny ) )
+			stop ("top.color not scalar or suitable matrix")
+		if (! (is.matrix (side.color) && nrow (side.color) == nx && ncol (side.color) == ny ) )
+			stop ("side.color not scalar or suitable matrix")
 	}
 	else
-	{	if (is.matrix (colors) )
-			colors.t = colors.f = colors
+	{	if (is.matrix (args.cols) )
+			top.color = side.color = args.cols
 		else
-		{	colors.t = colors [[1]]
-			colors.f = colors [[2]]
+		{	top.color = args.cols [[1]]
+			side.color = args.cols [[2]]
 		}
 	}
 
@@ -84,34 +75,38 @@ plot_bar = function (x, y, fv, ...,
     		{	if (is.na (fv [i, j]) )
 				NULL
 			else
-				.barsurf.bar (xb [i], xb [i + 1], yb [j], yb [j + 1], fv [i, j], colors.t [i, j], colors.f [i, j])
+				.barsurf.bar (xb [i], xb [i + 1], yb [j], yb [j + 1], fv [i, j], top.color [i, j], side.color [i, j])
 		}
 	}
-    par (p0)
+	par (p0)
+	.catchargs (...)
 }
 
 plot_surface = function (x, y, fv, ...,
-	grid.lines=TRUE,
-	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
-	zlim, axes=TRUE, arrows=TRUE, grid.color, color.function, color.fit)
-{	nx = nrow (fv)
-	ny = ncol (fv)
+	main="", xlab="x", ylab="y", zlab="z",
+	grid=TRUE, gradient.shading=TRUE,
+	axes=TRUE, z.axis=FALSE,
+	ref.arrows = opt.ref.arrows (), reverse=FALSE,
+	zlim, xat, yat, xlabs, ylabs,
+	nhl = opt.nhl (),
+	grid.color = opt.sgrid.color (),
+	colf, colff)
+{	args = .extract.private.args (...)
+	if (! is.null (args$arrows) )
+		ref.arrows = args$arrows
+
 	axes = .dbl (axes)
-	arrows = .dbl (arrows)
-	if (nx < 2 || ny < 2)
-		stop ("nrow (fv) or ncol (fv) < 2")
-	if (missing (x) )
-		x = 1:nx
-	else if (length (x) != nx)
-		stop ("length (x) != nrow (fv)")
-	if (missing (y) )
-		y = 1:ny
-	else if (length (y) != ny)
-		stop ("length (y) != ncol (fv)")
-	xs = (x - min (x) ) / diff (range (x) )
-	ys = (y - min (y) ) / diff (range (y) )
-	if (missing (main) )
-		main = ""
+	reverse = .dbl (reverse)
+	ref.arrows = .dbl (ref.arrows)
+
+	nx = ny = 0
+	.UNPACK (.val.xy (x, y, fv, reverse=reverse) )
+	fv0 = fv
+
+	if (axes [1] && ! ref.arrows [1]) .UNPACK (.axis.val (x, xat, xlabs) )
+	if (axes [2] && ! ref.arrows [2]) .UNPACK (.axis.val (y, yat, ylabs) )
+	.UNPACK (.axis.scale (x, xat, reverse [1]) )
+	.UNPACK (.axis.scale (y, yat, reverse [2]) )
 
 	w = matrix (0, nrow = nx - 1, ncol = ny - 1)
 	if (.is.const (zlim, fv) )
@@ -124,59 +119,73 @@ plot_surface = function (x, y, fv, ...,
 	{	if (missing (zlim) )
 			zlim = range (fv)
 		fv = (fv - zlim [1]) / diff (zlim)
-		for (i in 1:(nx - 1) )
-		{	for (j in 1:(ny - 1) )
-			{	fsub = c (fv [i, j], fv [i, j + 1], fv [i + 1, j], fv [i + 1, j + 1])
-				w [i, j] = max (fsub) - min (fsub)
+		if (gradient.shading)
+		{	for (i in 1:(nx - 1) )
+			{	for (j in 1:(ny - 1) )
+				{	fsub = c (fv [i, j], fv [i, j + 1], fv [i + 1, j], fv [i + 1, j + 1])
+					w [i, j] = max (fsub) - min (fsub)
+				}
 			}
+			if (.is.plane (w) )
+				w [] = 0
 		}
-		if (.is.plane (w) )
-			w [] = 0
 	}
 
-	p0 = par (mar=c (1, 0.2, 1, 0.2) )
+	p0 = .mar3 (nhl)
 	plot.new ()
 	plot.window (c (-0.75, 0.75), c (0, 1.5) )
-	.barsurf.frame (axes [1] && arrows [1], axes [2] && arrows [2])
+	.barsurf.frame (axes [1] && ref.arrows [1], axes [2] && ref.arrows [2], reverse [1], reverse [2])
 	title (main)
 	.barsurf.labs (xlab, ylab)
-	if (axes [1] && ! arrows [1])
-		.surface.axes ("x", x, xat, xlabs)
-	if (axes [2] && ! arrows [2])
-		.surface.axes ("y", y, yat, ylabs)
+	if (axes [1] && ! ref.arrows [1]) .barsurf.xlabs (xat, xlabs)
+	if (axes [2] && ! ref.arrows [2]) .barsurf.ylabs (yat, ylabs)
+	if (z.axis) .z.axis (zlab, zlim)
 
-	v = .line.attr (grid.lines, grid.color)
-	if (missing (color.function) )
-	{	if (missing (color.fit) )
-		{	color.fit = getOption ("barsurf")$litmus.fit.lum
-			color.fit = eval (str2lang (color.fit) )
-		}
-		color.function = color.fit (w)
+	line.width = .fine.line.width ()
+	if (! grid)
+		grid.color = NA
+	if (gradient.shading)
+	{	colf = .ST (colf, colff, w, NULL, "lum")
+		colors = colf (w)
 	}
-	colors = color.function (w)
+	else
+	{	colf = .ST (colf, colff, fv0, NULL, "lum")
+		colors = colf (fv0)
+	}
 	for (i in (nx - 1):1)
 	{	for (j in (ny - 1):1)
-		{	xsub = c (xs [i], xs [i], xs [i + 1], xs [i + 1])
-			ysub = c (ys [j], ys [j + 1], ys [j + 1], ys [j])
+		{	xsub = c (x [i], x [i], x [i + 1], x [i + 1])
+			ysub = c (y [j], y [j + 1], y [j + 1], y [j])
 			fsub = c (fv [i, j], fv [i, j + 1], fv [i + 1, j + 1], fv [i + 1, j])
-			.barsurf.poly (xsub, ysub, fsub, colors [i, j], v [[1]], v [[2]])
+			.barsurf.poly (xsub, ysub, fsub, colors [i, j], line.width, grid.color)
 		}
 	}
 	par (p0)
+	.catchargs (...)
 }
 
 plot_trisurface = function (x, y, fv, ...,
-	grid.lines=TRUE,
-	main, xlab="x", ylab="y",
-	zlim, axes=TRUE, arrows=TRUE, grid.color, color.function, color.fit)
-{	n = .test.fv (fv)
-	axes = .dbl (axes)
-	arrows = .dbl (arrows)
+	main="", xlab="x", ylab="y", zlab="z",
+	grid=TRUE,
+	axes=TRUE, z.axis=FALSE,
+	ref.arrows = opt.ref.arrows (),
+	zlim,
+	xat, yat, xlabs, ylabs,
+	nhl = opt.nhl (),
+	grid.color = opt.sgrid.color (),
+	colf, colff)
+{	axes = .dbl (axes)
+	ref.arrows = .dbl (ref.arrows)
+
+	n = 0
+	.UNPACK (.val.tri (fv) )
 	x = y = seq (0, 1, length.out=n)
-	if (missing (main) )
-		main = ""
+
+	if (axes [1] && ! ref.arrows [1]) .UNPACK (.axis.val (x, xat, xlabs) )
+	if (axes [2] && ! ref.arrows [2]) .UNPACK (.axis.val (y, yat, ylabs) )
 
 	w1 = w2 = matrix (0, nrow = n - 1, ncol = n - 1)
+
 	if (.is.const (zlim, fv) )
 	{	if (missing (zlim) )
 			fv [] = 0.5
@@ -207,27 +216,20 @@ plot_trisurface = function (x, y, fv, ...,
 		}
 	}
 
-	p0 = par (mar=c (1, 0.2, 1, 0.2) )
+	p0 = .mar3 (nhl)
 	plot.new ()
 	plot.window (c (-0.75, 0.75), c (0, 1.5) )
-	.barsurf.frame (axes [1] && arrows [1], axes [2] && arrows [2])
+	.barsurf.frame (axes [1] && ref.arrows [1], axes [2] && ref.arrows [2])
 	title (main)
 	.barsurf.labs (xlab, ylab)
-	if (axes [1] && ! arrows [1])
-		.trisurface.axes ("x", x)
-	if (axes [2] && ! arrows [2])
-		.trisurface.axes ("y", y)
+	if (axes [1] && ! ref.arrows [1]) .barsurf.xlabs (xat, xlabs)
+	if (axes [2] && ! ref.arrows [2]) .barsurf.ylabs (yat, ylabs)
+	if (z.axis) .z.axis (zlab, zlim)
 
-	v = .line.attr (grid.lines, grid.color)
-	if (missing (color.function) )
-	{	if (missing (color.fit) )
-		{	color.fit = getOption ("barsurf")$litmus.fit.lum
-			color.fit = eval (str2lang (color.fit) )
-		}
-		color.function = color.fit (c (w1, w2) )
-	}
-	colors1 = color.function (w1)
-	colors2 = color.function (w2)
+	line.width = .fine.line.width ()
+	colf = .ST (colf, colff, c (w1, w2), NULL, "lum")
+	colors1 = colf (w1)
+	colors2 = colf (w2)
 	for (i in (n - 1):1)
 	{	for (j in (n - i):1)
 		{	if (i < n - 1 && j < n - i)
@@ -235,20 +237,22 @@ plot_trisurface = function (x, y, fv, ...,
 				ysub = c (y [j + 1], y [j], y [j + 1])
 				fsub = c (fv [i, j + 1], fv [i + 1, j], fv [i + 1, j + 1])
 				colorstr = colors1 [i, j]
-				.barsurf.poly (xsub, ysub, fsub, colorstr, v [[1]], v [[2]])
+				.barsurf.poly (xsub, ysub, fsub, colorstr, line.width, grid.color)
 			}	
 			xsub = c (x [i], x [i], x [i + 1])
 			ysub = c (y [j], y [j + 1], y [j])
 			fsub = c (fv [i, j], fv [i, j + 1], fv [i + 1, j])
 			colorstr = colors1 [i, j]
-			.barsurf.poly (xsub, ysub, fsub, colorstr, v [[1]], v [[2]])
+			.barsurf.poly (xsub, ysub, fsub, colorstr, line.width, grid.color)
 		}
 	}
 	par (p0)
+	.catchargs (...)
 }
 
 .is.const = function (flim, fv)
-{	u = unique.default (fv)
+{	u = unique (as.vector (fv) )
+	u = u [is.finite (u)]
 	if (length (u) == 1)
 		TRUE
 	else if (missing (flim) )
@@ -263,63 +267,4 @@ plot_trisurface = function (x, y, fv, ...,
 {	meanw = abs (mean (w, na.rm=TRUE) )
 	dw = diff (range (w, na.rm=TRUE) )
 	(dw < abs (meanw) / 1000)
-}
-
-.line.attr = function (grid.lines, grid.coloror, iso=FALSE)
-{	rs = getOption ("barsurf")$rendering.style
-	line.width = 1
-	if (grid.lines)
-	{	if (missing (grid.coloror) )
-		{	if (rs == "p")
-				grid.coloror = "#000000"
-			else if (iso)
-				grid.coloror = "#404040"
-			else
-				grid.coloror = getOption ("barsurf")$soft.line.color
-		}
-		if (rs == "e")
-			line.width = 0.125
-	}
-	else
-		grid.coloror = NA
-	list (line.width, grid.coloror)
-}
-
-.surface.axes = function (which, x, xat, xlabs)
-{	xlim = range (x)
-	xrng = diff (xlim)
-	if (missing (xat) )
-	{	if (! missing (xlabs) )
-			stop ("xat/yat needed if xlabs/ylabs supplied")
-		xat = pretty (x)
-		n = length (xat)
-		if (n > 2)
-		{	dx = xrng / 15
-			xat = xat [xat > xlim [1] + dx & xat < xlim [2] - dx]
-		}
-	}
-	if (missing (xlabs) )
-		xlabs = xat
-	xat = (xat - min (x) ) / xrng
-	if (which == "x")
-		.barsurf.xlabs (xat, xlabs)
-	else
-		.barsurf.ylabs (xat, xlabs)
-}
-
-.trisurface.axes = function (which, x)
-{	xlim = range (x)
-	xrng = diff (xlim)
-	xat = pretty (x)
-	n = length (xat)
-	if (n > 2)
-	{	dx = xrng / 15
-		xat = xat [xat > xlim [1] + dx & xat < xlim [2] - dx]
-	}
-	xlabs = xat
-	xat = (xat - min (x) ) / xrng
-	if (which == "x")
-		.barsurf.xlabs (xat, xlabs)
-	else
-		.barsurf.ylabs (xat, xlabs)
 }

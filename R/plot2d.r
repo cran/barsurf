@@ -1,4 +1,4 @@
-#barsurf: Heatmap-Related Plots and Smooth Multiband Color Interpolation
+#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
 #Copyright (C), Abby Spurdle, 2020
 
 #This program is distributed without any warranty.
@@ -11,46 +11,7 @@
 #Also, this license should be available at:
 #https://cran.r-project.org/web/licenses/GPL-2
 
-.axis.val = function (label, nx, rnames, xat, xlabs, x, with.labs=TRUE)
-{	if (missing (x) )
-	{	uat = 1:nx
-		xb = c (uat - 0.5, nx + 0.5)
-	}
-	else if (length (x) == nx)
-	{	uat = x
-		xb = (x [-nx] + x [-1]) / 2
-		xb = c (2 * uat [1] - xb [1], xb, 2 * uat [nx] - xb [nx - 1])
-	}
-	else if (length (x) == nx + 1)
-	{	uat = (x [-(nx + 1)] + x [-1]) / 2
-		xb = x
-	}
-	else
-		stop (sprintf ("length (%s) unsuitable", label) )
-	if (with.labs)
-	{	if (missing (xat) )
-		{	if (missing (xlabs) )
-			{	if (is.null (rnames) )
-					xlabs = format (signif (uat, 2) )
-				else
-					xlabs = rnames
-			}
-			else if (length (xlabs) != nx)
-				stop (sprintf ("length (%slabs) unsuitable", label) )
-		}
-		else
-		{	if (missing (xlabs) )
-				xlabs = format (signif (xat, 2) )
-			else if (length (xat) != length (xlabs) )
-				stop (sprintf ("length (%sat) != length (%slabs)", label, label) )
-		}
-		list (uat, xlabs, xb)
-	}
-	else
-		list (NA, NA, xb)
-}
-
-.plot.new = function (main, xlab, ylab, xyrel, reverse, x, y)
+.plot.new = function (main, xlab, ylab, xyrel, reverse, swap.sides, x, y)
 {	if (xyrel == "f" || xyrel == "m") pty = "m"
 	else if (xyrel == "s") pty = "s"
 	else stop ("xyrel not in {f, s, m}")
@@ -85,11 +46,9 @@
 
 	plot.new ()
 	plot.window (xlim=xlim, ylim=ylim, xaxs="i", yaxs="i")
-	if (missing (main) )
-		main = ""
-	if (reverse [1]) mtext (ylab, 4, 3, cex = par ("cex") )
+	if (swap.sides [1]) mtext (ylab, 4, 3, cex = par ("cex") )
 	else title (ylab=ylab)
-	if (reverse [2])
+	if (swap.sides [2])
 	{	mtext (main, 1, 2, font=2, cex = par ("cex") * par ("cex.main") )
 		mtext (xlab, 3, 3, cex = par ("cex") )
 	}
@@ -97,125 +56,126 @@
 	p0
 }
 
-plot_dfield = function (x, y, fv, fb, ...,
-	grid.lines, contours=TRUE, heatmap=TRUE, bin.labels=FALSE, contour.labels=FALSE,
-	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
-	xyrel = test.xyrel (x, y, fv), transpose=FALSE,
-	add=FALSE, axes=TRUE, reverse=FALSE,
+plot_dfield = function (x, y, fv, ..., fb,
+	main="", xlab="x", ylab="y",
+	contours=TRUE, grid=FALSE, heatmap=TRUE,
+	contour.labels=FALSE, bin.labels=FALSE,
+	add=FALSE, axes=TRUE, reverse=FALSE, swap.sides=FALSE,
+	xyrel, continuous.axes=FALSE,
 	ncontours=2, clabs, blabs,
-	grid.color, contour.color="#000000",
-	color.function, color.fit, colors, hcv=FALSE)
-{	if (transpose)
-	{	fv = t (fv)
-		if (! missing (blabs) )
-			blabs = t (blabs)
-		if (! missing (colors) )
-			colors = t (colors)
-	}
-	nx = nrow (fv)
-	ny = ncol (fv)	
-	xaxis = .axis.val ("x", nx, rownames (fv), xat, xlabs, x)
-	yaxis = .axis.val ("y", ny, colnames (fv), yat, ylabs, y)
-	if (missing (xat) )
-		xat = xaxis [[1]]
-	if (missing (yat) )
-		yat = yaxis [[1]]
-	xlabs = xaxis [[2]]
-	xb = xaxis [[3]]
-	ylabs = yaxis [[2]]
-	yb = yaxis [[3]]
-	if (missing (grid.lines) )
-		grid.lines = (transpose && nx <= 20 && ny <= 20)
-
-	axes = .dbl (axes)
+	xat, yat, xlabs, ylabs,
+	contour.color="#000000", grid.color="#888888", 
+	colf, colff, colors, hcv=FALSE)
+{	axes = .dbl (axes)
 	reverse = .dbl (reverse)
-	grid.lines = .dbl (grid.lines)
+	swap.sides = .dbl (swap.sides)
+	continuous.axes = .dbl (continuous.axes)
+	if (missing (xyrel) )
+		xyrel = test.xyrel (x, y, fv)
 
-	if (! add)
-		p0 = .plot.new (main, xlab, ylab, xyrel, reverse, xb, yb)
-	
-	if (heatmap)
-	{	if (missing (colors) )
-		{	colors = .extract.cols (...)
-			if (is.null (colors) )
-			{	if (missing (color.function) )
-				{	if (missing (color.fit) )
-					{	if (hcv) color.fit = getOption ("barsurf")$litmus.fit.hcv
-						else color.fit = getOption ("barsurf")$litmus.fit
-						color.fit = eval (str2lang (color.fit) )
-					}
-					color.function = color.fit (fv)
-				}
-				colors = color.function (fv)
-			}
-		}
-		.plot.heatmap (nx, ny, xb, yb, colors)
-	}
-	if (any (grid.lines) )
-	{	v = .line.attr (TRUE, grid.color)
-		if (grid.lines [1])
-			abline (v=xb, lwd = v [[1]], col = v [[2]])
-		if (grid.lines [2])
-			abline (h=yb, lwd = v [[1]], col = v [[2]])
-	}
-	if (contours && ncontours > 0)
-		.plot.contours (xaxis [[1]], yaxis [[1]], fv, ncontours, fb, contour.labels, clabs, contour.color)
+	nx = ny = xb = yb = 0
+	.UNPACK (.val.xy (x, y, fv, TRUE) )
+
+	if (axes [1]) .UNPACK (.axis.val (x, xat, xlabs, continuous.axes [1], names = rownames (fv) ) )
+	if (axes [2]) .UNPACK (.axis.val (y, yat, ylabs, continuous.axes [2], names = colnames (fv) ) )
+
 	if (bin.labels)
 	{	if (missing (blabs) )
 			blabs = fv
-		text (rep (xat, times=ny), rep (yat, each=nx), blabs)
+		else
+			.val.dfield.matrix (nx, ny, blabs)
 	}
+
+	if (missing (colors) )
+		colors = .extract.private.args (...)$cols
+	if (heatmap && ! is.null (colors) )
+		.val.dfield.matrix (nx, ny, colors)
+
 	if (! add)
-	{	.box (axes, reverse, xat, yat, xlabs, ylabs)
+		p0 = .plot.new (main, xlab, ylab, xyrel, reverse, swap.sides, xb, yb)
+
+	if (heatmap)
+	{	if (is.null (colors) )
+		{	colf = .ST (colf, colff, fv, hcv)
+			colors = colf (fv)
+		}
+		.plot.heatmap (nx, ny, xb, yb, colors)
+	}
+
+	line.width = .fine.line.width ()
+	if (grid)
+	{	abline (v=xb, lwd=line.width, col=grid.color)
+		abline (h=yb, lwd=line.width, col=grid.color)
+	}
+	if (contours && ncontours > 0)
+		.plot.contours (x, y, fv, ncontours, fb, contour.labels, clabs, contour.color)
+	if (bin.labels)
+		text (rep (x, times=ny), rep (y, each=nx), blabs)
+
+	if (! add)
+	{	.box (axes, reverse, xat, yat, xlabs, ylabs, swap.sides)
 		par (p0)
 	}
+	.catchargs (...)
 }
 
-plot_matrix = function (x, y, fv, fb, ...,
-	grid.lines, contours=FALSE, heatmap=TRUE, bin.labels=FALSE, contour.labels=FALSE,
-	main, xlab="col", ylab="row", xat, yat, xlabs, ylabs,
-	xyrel = test.xyrel (x, y, fv), transpose=TRUE,
-	add=FALSE, axes=TRUE, reverse = c (FALSE, transpose),
-	ncontours=2, clabs, blabs,
-	grid.color, contour.color="#000000",
-	color.function, color.fit, colors, hcv=TRUE)
-{	plot_dfield (x, y, fv, fb,
-		grid.lines=grid.lines, contours=contours, heatmap=heatmap, bin.labels=bin.labels, contour.labels=contour.labels,
-		main=main, xlab=xlab, ylab=ylab, xat=xat, yat=yat, xlabs=xlabs, ylabs=ylabs,
-		xyrel=xyrel, transpose=transpose,
-		add=add, axes=axes, reverse=reverse,
-		ncontours=ncontours, clabs=clabs, blabs=blabs,
-		grid.color=grid.color, contour.color=contour.color,
-		color.function=color.function, color.fit=color.fit, colors=colors, hcv=hcv, ...)
+plot_matrix = function (x, y, fv, ..., transpose=TRUE,
+	xlab, ylab,
+	contours=FALSE, grid, bin.labels,
+	reverse = c (FALSE, transpose), swap.sides=reverse,
+	blabs, colors,
+	hcv=TRUE)
+{	v = .val.xy (x, y, fv, TRUE, transpose=transpose)
+
+	if (missing (grid) )
+		grid = (v$nx <= 20 && v$ny <= 20)
+	if (missing (bin.labels) )
+		bin.labels = (v$nx <= 10 && v$ny <= 10)
+
+	if (transpose)
+	{	if (missing (xlab) ) xlab = "col"
+		if (missing (ylab) ) ylab = "row"
+		if (bin.labels && ! missing (blabs) )
+		{	.val.dfield.matrix (v$ny, v$nx, blabs)
+			blabs = t (blabs)
+
+		}
+		if (! missing (colors) )
+		{	.val.dfield.matrix (v$ny, v$nx, colors)
+			colors = t (colors)
+		}
+	}
+	else
+	{	if (missing (xlab) ) xlab = "row"
+		if (missing (ylab) ) ylab = "col"
+	}
+
+	plot_dfield (x, y, v$fv,
+		xlab=xlab, ylab=ylab, 
+		contours=contours, grid=grid, bin.labels=bin.labels,
+		reverse=reverse, swap.sides=swap.sides,
+		blabs=blabs, colors=colors,
+		hcv=hcv, ...)
 }
 
-plot_cfield = function (x, y, fv, fb, ...,
+plot_cfield = function (x, y, fv, ..., fb,
+	main="", xlab="x", ylab="y",
 	contours=TRUE, heatmap=TRUE, contour.labels=FALSE,
-	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
-	xyrel = test.xyrel (x, y, fv),
-	add=FALSE, axes=TRUE, reverse=FALSE,
+	add=FALSE, axes=TRUE, reverse=FALSE, swap.sides=FALSE,
 	ncontours=6, clabs,
-	contour.color="#000000", color.function, color.fit, hcv=FALSE)
-{	nx = nrow (fv)
-	ny = ncol (fv)
-	if (nx < 2 || ny < 2)
-		stop ("nrow (fv) or ncol (fv) < 2")
-	force (xyrel)
-	if (missing (x) )
-		x = 1:nx
-	else if (length (x) != nx)
-		stop ("length (x) != nrow (fv)")
-	if (missing (y) )
-		y = 1:ny
-	else if (length (y) != ny)
-		stop ("length (y) != ncol (fv)")
-
-	axes = .dbl (axes)
+	xyrel, xat, yat, xlabs, ylabs,
+	contour.color="#000000", colf, colff, hcv=FALSE)
+{	axes = .dbl (axes)
 	reverse = .dbl (reverse)
+	swap.sides = .dbl (swap.sides)
+	if (missing (xyrel) )
+		xyrel = test.xyrel (x, y, fv)
+
+	nx = ny = 0
+	.UNPACK (.val.xy (x, y, fv) )
 
 	if (! add)
-		p0 = .plot.new (main, xlab, ylab, xyrel, reverse, x, y)
-
+		p0 = .plot.new (main, xlab, ylab, xyrel, reverse, swap.sides, x, y)
 	if (heatmap)
 	{	w = matrix (0, nrow=nx - 1, ncol=ny - 1)
 		for (i in 1:(nx - 1) )
@@ -224,43 +184,32 @@ plot_cfield = function (x, y, fv, fb, ...,
 				w [i, j] = mean (fsub)
 			}
 		}
-		if (missing (color.function) )
-		{	if (missing (color.fit) )
-			{	if (hcv) color.fit = getOption ("barsurf")$litmus.fit.hcv
-				else color.fit = getOption ("barsurf")$litmus.fit
-				color.fit = eval (str2lang (color.fit) )
-			}
-			color.function = color.fit (w)
-		}
-		colors = color.function (w)
+		colf = .ST (colf, colff, w, hcv)
+		colors = colf (w)
 		.plot.heatmap (nx - 1, ny - 1, x, y, colors)
 	}
 	if (contours && ncontours > 0)
 		.plot.contours (x, y, fv, ncontours, fb, contour.labels, clabs, contour.color)
-
 	if (! add)
-	{	.box (axes, reverse, xat, yat, xlabs, ylabs)
+	{	.box (axes, reverse, xat, yat, xlabs, ylabs, swap.sides)
 		par (p0)
 	}
+	.catchargs (...)
 }
 
-plot_tricontour = function (x, y, fv, fb, ...,
+plot_tricontour = function (x, y, fv, ..., fb,
+	main="", xlab="x", ylab="y",
 	contours=TRUE, heatmap=TRUE, contour.labels=FALSE,
-	main, xlab="x", ylab="y",
-	xyrel="s",
-	axes=TRUE,
-	ncontours=6, clabs,
-	contour.color="#000000", color.function, color.fit, hcv=FALSE)
-{	n = .test.fv (fv)
+	axes=TRUE, ncontours=6, clabs, xyrel="s",
+	xat, yat, xlabs, ylabs,
+	contour.color="#000000", colf, colff, hcv=FALSE)
+{	n = 0
+	.UNPACK (.val.tri (fv) )
 	x = y = seq (0, 1, length.out=n)
-	for (i in 2:n)
-	{	for (j in n:(n - i + 2) )
-			fv [i, j] = NA
-	}
 
 	axes = .dbl (axes)
-	p0 = .plot.new (main, xlab, ylab, xyrel, c (FALSE, FALSE), x, y)
-
+	
+	p0 = .plot.new (main, xlab, ylab, xyrel, c (FALSE, FALSE), c (FALSE, FALSE), x, y)
 	if (heatmap)
 	{	w1 = w2 = matrix (NA, nrow=n, ncol=n)
 		for (i in 1:(n - 1) )
@@ -277,16 +226,10 @@ plot_tricontour = function (x, y, fv, fb, ...,
 				}
 			}
 		}
-		if (missing (color.function) )
-		{	if (missing (color.fit) )
-			{	if (hcv) color.fit = getOption ("barsurf")$litmus.fit.hcv
-				else color.fit = getOption ("barsurf")$litmus.fit
-				color.fit = eval (str2lang (color.fit) )
-			}
-			color.function = color.fit (c (w1, w2) )
-		}
-		colors1 = color.function (w1)
-		colors2 = color.function (w2)
+
+		colf = .ST (colf, colff, c (w1, w2), hcv)
+		colors1 = colf (w1)
+		colors2 = colf (w2)
 		for (i in 1:(n - 1) )
 		{	for (j in 1:(n - i) )
 			{	xsub = c (x [i], x [i], x [i + 1])
@@ -308,114 +251,22 @@ plot_tricontour = function (x, y, fv, fb, ...,
 	}
 	if (contours && ncontours > 0)
 		.plot.contours (x, y, fv, ncontours, fb, contour.labels, clabs, contour.color)
-
 	polygon (c (0, 1, 1), c (1, 0, 1), border=NA, col="white")
 	polygon (c (0, 0, 1), c (0, 1, 0) )
-	if (axes [1])
-		axis (1)
-	if (axes [2])
-		axis (2)
+	if (axes [1]) .axis (1, xat, xlabs)
+	if (axes [2]) .axis (2, yat, ylabs)
 	par (p0)
+	.catchargs (...)
 }
 
-plot_vecfield = function (x, y, fx, fy, ...,
-	vectors=TRUE, heatmap=TRUE, all=FALSE,
-	main, xlab="x", ylab="y", xat, yat, xlabs, ylabs,
-	xyrel = test.xyrel (x, y, fv),
-	add=FALSE, axes=TRUE, reverse=FALSE,
-	arrowh.length=1.75, arrowh.width = 0.75 * arrowh.length, arrow.color="#000000", fill.color="#08080810",
-	color.function, color.fit, hcv=FALSE)
-{	nx = nrow (fx)
-	ny = ncol (fx)
-	force (xyrel)
-	if (nx < 2 || ny < 2)
-		stop ("nrow (f*) or ncol (f*) < 2")
-	if (nx != nrow (fy) || ny != ncol (fy) )
-		stop ("fx and fy need same dimensions")
-	if (missing (x) )
-		x = 1:nx
-	else if (length (x) != nx)
-		stop ("length (x) != nrow (f*)")
-	if (missing (y) )
-		y = 1:ny
-	else if (length (y) != ny)
-		stop ("length (y) != ncol (f*)")
-
-	axes = .dbl (axes)
-	reverse = .dbl (reverse)
-
-	if (! add)
-		p0 = .plot.new (main, xlab, ylab, xyrel, reverse, x, y)
-
-	if (heatmap)
-	{	gv = sqrt (fx ^ 2 + fy ^ 2)
-
-		w = matrix (0, nrow=nx - 1, ncol=ny - 1)
-		for (i in 1:(nx - 1) )
-		{	for (j in 1:(ny - 1) )
-			{	gsub = c (gv [i, j], gv [i, j + 1], gv [i + 1, j], gv [i + 1, j + 1])
-				w [i, j] = mean (gsub)
-			}
-		}
-		if (missing (color.function) )
-		{	if (missing (color.fit) )
-			{	if (hcv) color.fit = getOption ("barsurf")$litmus.fit.hcv
-				else color.fit = getOption ("barsurf")$litmus.fit.flow
-				color.fit = eval (str2lang (color.fit) )
-			}
-			color.function = color.fit (w)
-		}
-		colors = color.function (w)
-		.plot.heatmap (nx - 1, ny - 1, x, y, colors)
-	}
-	if (vectors && nx > 2 && ny > 2)
-	{	rs = getOption ("barsurf")$rendering.style
-		if (rs == "e")
-			line.width = 0.125
-		else
-			line.width = 1
-
-		dx = quantile (diff (x), 0.75)
-		dy = quantile (diff (y), 0.75)
-		hfx = max (fx, na.rm=TRUE)
-		hfy = max (fy, na.rm=TRUE)
-		if (all)
-		{	a = 1
-			b = 0
-		}
-		else
-		{	a = 2
-			b = 1
-		}
-		fu = fx [a:(nx - b), a:(ny - b)]
-		fv = fy [a:(nx - b), a:(ny - b)]
-		sfx = dx / hfx * fu / 2.1
-		sfy = dy / hfy * fv / 2.1
-		u = x [a:(nx - b)]
-		v = y [a:(ny - b)]
-		px = outer (u, rep (1, ny - 2 * b) )
-		py = outer (rep (1, nx - 2 * b), v)
-		x1 = px - sfx
-		x2 = px + sfx
-		y1 = py - sfy
-		y2 = py + sfy
-		.arrows (x1, y1, x2, y2, line.width, arrowh.length, arrowh.width, arrow.color, fill.color)
-	}
-
-	if (! add)
-	{	.box (axes, reverse, xat, yat, xlabs, ylabs)
-		par (p0)
-	}
-}
-
-.box = function (axes, reverse, xat, yat, xlabs, ylabs)
+.box = function (axes, reverse, xat, yat, xlabs, ylabs, swap.sides)
 {	box ()
 	if (axes [1])
-	{	if (reverse [2]) .axis (3, xat, xlabs)
+	{	if (swap.sides [2]) .axis (3, xat, xlabs)
 		else .axis (1, xat, xlabs)
 	}
 	if (axes [2])
-	{	if (reverse [1]) .axis (4, yat, ylabs)
+	{	if (swap.sides [1]) .axis (4, yat, ylabs)
 		else .axis (2, yat, ylabs)
 	}
 }
@@ -438,44 +289,17 @@ plot_vecfield = function (x, y, fx, fy, ...,
 			flim = range (fv, na.rm=TRUE)
 			fb = seq (flim [1], flim [2], length.out=N)[-c (1, N)]
 		}
+		else
+			ncontours = length (fb)
 		if (contour.labels)
 		{	if (missing (clabs) )
-				contour (x, y, fv, levels=fb, drawlabels=TRUE, add=TRUE, col=contour.color)
-			else
-			{	if (ncontours == length (clabs) )
-					contour (x, y, fv, levels=fb, drawlabels=TRUE, labels=clabs, add=TRUE, col=contour.color)
-				else
-					stop ("ncontours != length (clabs)")
-			}
+				clabs = signif (fb, 3)
+			else if (ncontours != length (clabs) )
+				stop ("ncontours != length (clabs)")
+			contour (x, y, fv, levels=fb, labcex=0.8, drawlabels=TRUE, labels=clabs, add=TRUE, col=contour.color)
 		}
 		else
 			contour (x, y, fv, levels=fb, drawlabels=FALSE, add=TRUE, col=contour.color)
-	}
-}
-
-.arrows = function (x0, y0, x1, y1, lwd=1, length=1.75, width=1.25, col="#000000", fill=col)
-{	k = 0.0394
-	min = abs (xinch (0.25 * k) )
-	xd = abs (xinch (length * k) )
-	yd = abs (yinch (width * k) )
-	ip = rbind (-xd, 0)
-	for (i in seq_len (length (x0) ) )
-	{	pxd = x1 [i] - x0 [i]
-		pyd = y1 [i] - y0 [i]
-		h = sqrt (pxd^2 + pyd^2)
-		if (! is.na (h) )
-		{	if (1.25 * xd <= h)
-			{	aps = rbind (c (0, -xd, -xd), c (0, yd, -yd) / 2)
-				theta = atan2 (pyd, pxd)
-				trans = matrix (c (cos (theta), sin (theta), -sin (theta), cos (theta) ), 2, 2)
-				ip2 = trans %*% ip
-				aps2 = trans %*% aps
-				lines (c (x0 [i], x1 [i] + ip2 [1]), c (y0 [i], y1 [i] + ip2 [2]), lwd=lwd, col=col)
-				polygon (aps2 [1,] + x1 [i], aps2 [2,] + y1 [i], lwd=lwd, border=col, col=fill)
-			}
-			else if (h > min)
-				lines (c (x0 [i], x1 [i]), c (y0 [i], y1 [i]), lwd=lwd, col=col)
-		}
 	}
 }
 
@@ -484,15 +308,6 @@ plot_vecfield = function (x, y, fx, fy, ...,
 	{	for (j in 1:nc)
 			rect (x [i], y [j], x [i + 1], y [j + 1], lwd=0.125, border = colors [i, j], col = colors [i, j])
 	}
-}
-
-.test.fv = function (fv)
-{	n = nrow (fv)
-	if (n != ncol (fv) )
-		stop ("fv needs to be square matrix")
-	if (n < 3)
-		stop ("nrow (fv) < 3")
-	n
 }
 
 test.xyrel = function (x, y, fv)
@@ -509,4 +324,14 @@ test.xyrel = function (x, y, fv)
 		"f"
 	else
 		"m"
+}
+
+.val.dfield.matrix = function (nx, ny, input.matrix)
+{	mname = as.character (substitute (input.matrix) )
+	if (is.matrix (input.matrix) )
+	{	if (nx != nrow (input.matrix) || ny != ncol (input.matrix) )
+			stop (sprintf ("fv and %s different dimensions", mname) )
+	}
+	else
+		stop (sprintf ("%s not matrix"), mname)
 }

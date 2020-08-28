@@ -1,4 +1,4 @@
-\name{11_other_supporting_functions_1}
+\name{61_check_xy_relationship}
 \alias{test.xyrel}
 \title{Test Axis Relationship}
 \description{Estimate the (plotting) relationship between the x and y axes.}
@@ -28,6 +28,12 @@ test.xyrel (x, y, fv)
 Refer to details.
 }
 \examples{
-fv <- matrix (1:20, 2, 10)
-test.xyrel (,,fv)
+fv1 <- matrix (1:40, 2, 20)
+fv2 <- matrix (1:50, 2, 25)
+
+test.xyrel (,,fv1)
+test.xyrel (seq (0, 1,, 2), seq (0, 20,, 20), fv1)
+
+test.xyrel (,,fv2)
+test.xyrel (seq (0, 1,, 2), seq (0, 1,, 25), fv1)
 }
