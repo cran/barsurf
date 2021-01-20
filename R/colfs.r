@@ -1,5 +1,5 @@
-#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
-#Copyright (C), Abby Spurdle, 2020
+#barsurf: Contour Plots, 3D Plots, Vector Fields and Heatmaps
+#Copyright (C), Abby Spurdle, 2018 to 2020
 
 #This program is distributed without any warranty.
 
@@ -12,7 +12,7 @@
 #https://cran.r-project.org/web/licenses/GPL-2
 
 .colf = function (colvs)
-	map.color (colvs, TRUE, from="HCL")
+	.map.color (colvs, TRUE, from="HCL")
 
 .tcol = function (colvs) .colf (colvs [1:4])
 .scol = function (colvs) .colf (colvs [5:8])
@@ -26,7 +26,7 @@
 .predef.fit = function (x, colvs, color.space, reverse=FALSE, equalize=0)
 	litmus.fit (x, colvs, color.space=color.space, reverse=reverse, equalize=equalize)
 
-map.color = function (colvs, string=FALSE, ..., from="sRGB", to="HCL", correction=TRUE)
+.map.color = function (colvs, string=FALSE, ..., from="sRGB", to="HCL", correction=TRUE)
 {	colvs = rbind (colvs)
 	nc = ncol (colvs)
 	rownames (colvs) = NULL
@@ -71,10 +71,4 @@ map.color = function (colvs, string=FALSE, ..., from="sRGB", to="HCL", correctio
 	}
 	else
 		colvs
-}
-
-map.color.3 = function (x, y, z, alpha, string=FALSE, ..., from="sRGB", to="HCL", correction=TRUE)
-{	if (missing (alpha) ) colvs = cbind (x, y, z)
-	else colvs = cbind (x, y, z, alpha)
-	map.color (colvs, string, from=from, to=to, correction=correction)
 }

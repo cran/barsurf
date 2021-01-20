@@ -1,5 +1,5 @@
-#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
-#Copyright (C), Abby Spurdle, 2020
+#barsurf: Contour Plots, 3D Plots, Vector Fields and Heatmaps
+#Copyright (C), Abby Spurdle, 2018 to 2020
 
 #This program is distributed without any warranty.
 
@@ -24,7 +24,7 @@
 
 .constf2 = function (color.space, colvs, na.color)
 {	colv = rbind (apply (colvs, 2, median) )
-	colv = map.color (colv, from=color.space, to="sRGB", correction=TRUE)
+	colv = .map.color (colv, from=color.space, to="sRGB", correction=TRUE)
 	if (length (colv) == 3) colstr = rgb (colv [1], colv [2], colv [3])
 	else colstr = rgb (colv [1], colv [2], colv [3], colv [4])
 	f = function (x)
@@ -63,7 +63,7 @@ litmus.spline = function (cx, colvs, ..., color.space="sRGB", na.color="#FFFFFF"
 	{	cx = rev (.$x)
 		colvs = colvs [n:1,]
 	}
-	colvs = map.color (colvs, from=color.space, to="sRGB", correction=TRUE)
+	colvs = .map.color (colvs, from=color.space, to="sRGB", correction=TRUE)
 	colvs [colvs < 0.001] = 0.001
 	colvs [colvs > 0.999] = 0.999
 	if (ncol (colvs) == 3)

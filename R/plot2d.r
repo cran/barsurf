@@ -1,5 +1,5 @@
-#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
-#Copyright (C), Abby Spurdle, 2020
+#barsurf: Contour Plots, 3D Plots, Vector Fields and Heatmaps
+#Copyright (C), Abby Spurdle, 2018 to 2020
 
 #This program is distributed without any warranty.
 
@@ -64,8 +64,9 @@ plot_dfield = function (x, y, fv, ..., fb,
 	xyrel, continuous.axes=FALSE,
 	ncontours=2, clabs, blabs,
 	xat, yat, xlabs, ylabs,
-	contour.color="#000000", grid.color="#888888", 
-	colf, colff, colors, hcv=FALSE)
+	raster=FALSE,
+	contour.color="#000000", grid.color="#888888",
+	colf, colff, theme, colors, hcv=FALSE)
 {	axes = .dbl (axes)
 	reverse = .dbl (reverse)
 	swap.sides = .dbl (swap.sides)
@@ -96,10 +97,10 @@ plot_dfield = function (x, y, fv, ..., fb,
 
 	if (heatmap)
 	{	if (is.null (colors) )
-		{	colf = .ST (colf, colff, fv, hcv)
+		{	colf = .ST (colf, colff, fv, theme, hcv)
 			colors = colf (fv)
 		}
-		.plot.heatmap (nx, ny, xb, yb, colors)
+		.plot.heatmap (nx, ny, xb, yb, colors, raster)
 	}
 
 	line.width = .fine.line.width ()
@@ -164,7 +165,8 @@ plot_cfield = function (x, y, fv, ..., fb,
 	add=FALSE, axes=TRUE, reverse=FALSE, swap.sides=FALSE,
 	ncontours=6, clabs,
 	xyrel, xat, yat, xlabs, ylabs,
-	contour.color="#000000", colf, colff, hcv=FALSE)
+	raster=FALSE,
+	contour.color="#000000", colf, colff, theme, hcv=FALSE)
 {	axes = .dbl (axes)
 	reverse = .dbl (reverse)
 	swap.sides = .dbl (swap.sides)
@@ -184,9 +186,9 @@ plot_cfield = function (x, y, fv, ..., fb,
 				w [i, j] = mean (fsub)
 			}
 		}
-		colf = .ST (colf, colff, w, hcv)
+		colf = .ST (colf, colff, w, theme, hcv)
 		colors = colf (w)
-		.plot.heatmap (nx - 1, ny - 1, x, y, colors)
+		.plot.heatmap (nx - 1, ny - 1, x, y, colors, raster, TRUE)
 	}
 	if (contours && ncontours > 0)
 		.plot.contours (x, y, fv, ncontours, fb, contour.labels, clabs, contour.color)
@@ -202,7 +204,7 @@ plot_tricontour = function (x, y, fv, ..., fb,
 	contours=TRUE, heatmap=TRUE, contour.labels=FALSE,
 	axes=TRUE, ncontours=6, clabs, xyrel="s",
 	xat, yat, xlabs, ylabs,
-	contour.color="#000000", colf, colff, hcv=FALSE)
+	contour.color="#000000", colf, colff, theme, hcv=FALSE)
 {	n = 0
 	.UNPACK (.val.tri (fv) )
 	x = y = seq (0, 1, length.out=n)
@@ -227,7 +229,7 @@ plot_tricontour = function (x, y, fv, ..., fb,
 			}
 		}
 
-		colf = .ST (colf, colff, c (w1, w2), hcv)
+		colf = .ST (colf, colff, c (w1, w2), theme, hcv)
 		colors1 = colf (w1)
 		colors2 = colf (w2)
 		for (i in 1:(n - 1) )
@@ -303,10 +305,18 @@ plot_tricontour = function (x, y, fv, ..., fb,
 	}
 }
 
-.plot.heatmap = function (nr, nc, x, y, colors)
-{	for (i in 1:nr)
-	{	for (j in 1:nc)
-			rect (x [i], y [j], x [i + 1], y [j + 1], lwd=0.125, border = colors [i, j], col = colors [i, j])
+.plot.heatmap = function (nr, nc, x, y, colors, raster=FALSE, s=FALSE)
+{	if (raster)
+	{	x = x [c (1, nr + 1)]
+		y = y [c (1, nc + 1)]
+		colors = t (colors)[nc:1,]
+		rasterImage (colors, x [1], y [1], x [2], y [2], interpolate=s)
+	}
+	else
+	{	for (i in 1:nr)
+		{	for (j in 1:nc)
+				rect (x [i], y [j], x [i + 1], y [j + 1], lwd=0.125, border = colors [i, j], col = colors [i, j])
+		}
 	}
 }
 

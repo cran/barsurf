@@ -9,7 +9,7 @@
 \alias{plot_isosurface}
 \alias{plot_cfield3}
 \alias{plot_matrix}
-\alias{plot_vec2}
+\alias{plot_vec}
 \alias{plot_vec3}
 \title{Main Plotting Functions}
 \description{
@@ -32,8 +32,9 @@ plot_dfield (x, y, fv, \dots, fb,
     xyrel, continuous.axes=FALSE,
     ncontours=2, clabs, blabs,
     xat, yat, xlabs, ylabs,
+    raster=FALSE,
     contour.color="#000000", grid.color="#888888", 
-    colf, colff, colors, hcv=FALSE)
+    colf, colff, theme, colors, hcv=FALSE)
 
 plot_cfield (x, y, fv, \dots, fb,
     main="", xlab="x", ylab="y",
@@ -41,7 +42,8 @@ plot_cfield (x, y, fv, \dots, fb,
     add=FALSE, axes=TRUE, reverse=FALSE, swap.sides=FALSE,
     ncontours=6, clabs,
     xyrel, xat, yat, xlabs, ylabs,
-    contour.color="#000000", colf, colff, hcv=FALSE)
+    raster=FALSE,
+    contour.color="#000000", colf, colff, theme, hcv=FALSE)
 
 ####################################
 #3d plots
@@ -54,7 +56,8 @@ plot_bar (x, y, fv, \dots,
     continuous.axes=FALSE,
     zlim, xat, yat, xlabs, ylabs,
     nhl = opt.nhl (),
-    top.color = opt.top.color (), side.color = opt.side.color () )
+    top.color = st.top.color (theme), side.color = st.side.color (theme),
+    theme)
 
 plot_surface (x, y, fv, \dots,
     main="", xlab="x", ylab="y", zlab="z",
@@ -63,8 +66,8 @@ plot_surface (x, y, fv, \dots,
     ref.arrows = opt.ref.arrows (), reverse=FALSE,
     zlim, xat, yat, xlabs, ylabs,
     nhl = opt.nhl (),
-    grid.color = opt.sgrid.color (),
-    colf, colff)
+    grid.color = st.sgrid.color (theme),
+    colf, colff, theme)
 
 ####################################
 #triangular plots
@@ -74,7 +77,7 @@ plot_tricontour (x, y, fv, \dots, fb,
     contours=TRUE, heatmap=TRUE, contour.labels=FALSE,
     axes=TRUE, ncontours=6, clabs, xyrel="s",
     xat, yat, xlabs, ylabs,
-    contour.color="#000000", colf, colff, hcv=FALSE)
+    contour.color="#000000", colf, colff, theme, hcv=FALSE)
 
 plot_trisurface (x, y, fv, \dots,
     main="", xlab="x", ylab="y", zlab="z",
@@ -84,8 +87,8 @@ plot_trisurface (x, y, fv, \dots,
     zlim,
     xat, yat, xlabs, ylabs,
     nhl = opt.nhl (),
-    grid.color = opt.sgrid.color (),
-    colf, colff)
+    grid.color = st.sgrid.color (theme),
+    colf, colff, theme)
 
 ####################################
 #3d plots
@@ -101,7 +104,8 @@ plot_isosurface (x, y, z, fv, \dots, fb, fq,
     nested=TRUE, maximal,
     xat, yat, xlabs, ylabs,
     nhl = opt.nhl (),
-    wire.color="#808080", iso.colors = opt.iso.colors () )
+    wire.color="#808080", iso.colors = st.iso.colors (theme),
+    theme)
 
 plot_cfield3 (x, y, z, fv, \dots, fb,
     main="", xlab="x", ylab="y", zlab="z",
@@ -112,7 +116,7 @@ plot_cfield3 (x, y, z, fv, \dots, fb,
     ncontours=6, emph="n",
     xat, yat, xlabs, ylabs, zlabs,
     nhl = opt.nhl (),
-    colf, colff)
+    colf, colff, theme)
 
 ####################################
 #matrix visualization
@@ -127,7 +131,7 @@ plot_matrix (x, y, fv, \dots, transpose=TRUE,
 ####################################
 #vector fields
 ####################################
-plot_vec2 (x, y, dx, dy, \dots,
+plot_vec (x, y, dx, dy, \dots,
     main="", xlab="x", ylab="y",
     vectors=TRUE, heatmap=TRUE,
     include.outermost.vectors=FALSE,
@@ -135,7 +139,7 @@ plot_vec2 (x, y, dx, dy, \dots,
     xyrel, xat, yat, xlabs, ylabs,
     arrowh.length=1.75, arrowh.width = 0.75 * arrowh.length,
     arrow.color="#000000", fill.color="#08080810",
-    colf, colff, hcv=FALSE)
+    colf, colff, theme, hcv=FALSE)
 
 plot_vec3 (x, y, z, dx, dy, dz, \dots, P = 1 / 3,
     main="", xlab="x", ylab="y", zlab="z",
@@ -152,7 +156,7 @@ plot_vec3 (x, y, z, dx, dy, dz, \dots, P = 1 / 3,
     Optional sorted numeric vectors of bin midpoints or breakpoints.\cr
     (Refer to the details section for plot_dfield).\cr
 
-    \bold{In plot_cfield, plot_surface, plot_vec2 and plot_vec3:}\cr
+    \bold{In plot_cfield, plot_surface, plot_vec and plot_vec3:}\cr
     Optional sorted numeric vectors of grid point coordinates.\cr
     Note, I recommend that the lengths of x and y are different for 3d vector fields.\cr
 
@@ -195,13 +199,13 @@ plot_vec3 (x, y, z, dx, dy, dz, \dots, P = 1 / 3,
     Note that in discretely-spaced plots, fv may contain missing values.\cr
     In other plots, missing values are not allowed.}
 \item{dx, dy, dz}{
-    \bold{In plot_vec2:}\cr
+    \bold{In plot_vec:}\cr
     Numeric matrices, of equal size, giving the x and y components of a vector field.\cr
 	
     \bold{In plot_vec3:}\cr
     Numeric 3d arrays, of equal size, giving the x, y and z components of a vector field.\cr
 
-    In plot_vec2, they may include missing values.\cr
+    In plot_vec, they may include missing values.\cr
     Note, I recommend that x-dim and y-dim are different for 3d vector fields.\cr
     (i.e. dim (dx)[1] != dim (dx)[2]).\cr
     This is to minimize possible over plotting.}
@@ -274,22 +278,28 @@ plot_vec3 (x, y, z, dx, dy, dz, \dots, P = 1 / 3,
 \item{zlabs}{Optional character vectors, the slide labels.}
 \item{nhl}{Integer, the number of header lines.}
 \item{arrowh.length, arrowh.width}{Numerics, arrow head length and width, in mm.}
+\item{raster}{Logical, if true, use raster-based graphics for the heatmap.\cr
+    Note that it's possible the default value (false) may change, in the future.\cr
+    Please refer to the subsection on raster-based heatmaps in the details section, if you're interested in setting this to true.}
 \item{contour.color}{Character vector (or R color strings) of length one or with the same length as the number of contours, giving the contour line colors.}
 \item{grid.color}{String (R color string), giving the grid line color.}
 \item{wire.color}{Sring (R color string), giving the wire frame color.}
 \item{colf}{A litmus object (or equivalent color function), refer to details section for color functions.}
 \item{colff}{A litmus-fitting function, refer to details section for color functions.}
-\item{colors}{
-    Optional character matrix (R color strings), for the bin colors.\cr
-    Its dimensions need to match fv.}
 \item{top.color, side.color}{
     Strings (R color strings) giving the top and side colors of bars.\cr
     Also, can be character matrices.\cr
     If matrices, then their dimensions need to match fv.}
 \item{iso.colors}{
     Character vector (R color strings), giving the (initial) isosurface colors.}
+\item{colors}{
+    Optional character matrix (R color strings), for the bin colors.\cr
+    Its dimensions need to match fv.}
 \item{arrow.color, fill.color}{Strings (R color strings), arrow line and fill colors.}
 \item{head.color, mid.color, tail.color}{Strings (R color strings), the arrow colors.}
+\item{theme}{String, the name of a supported theme.\cr
+    If missing, default color values are determined by global options.\cr\cr
+    Refer to \link{set.bs.theme}.}
 \item{hcv}{Logical, if true, use the high color variation option.}
 \item{\dots}{Ignored.}
 }
@@ -400,9 +410,9 @@ All other arguments (x, y, etc) apply to the transposed matrix, not the original
 
 
 \bold{2D VECTOR FIELDS}\cr
-(plot_vec2)\cr
+(plot_vec)\cr
 
-plot_vec2 is similar to plot_cfield, except that there are two dx and dy matrices, instead of a single fv matrix.
+plot_vec is similar to plot_cfield, except that there are two dx and dy matrices, instead of a single fv matrix.
 
 The color of the heatmap bins reflects the magnitude of the four surrounding vectors.\cr\cr
 
@@ -410,7 +420,7 @@ The color of the heatmap bins reflects the magnitude of the four surrounding vec
 \bold{3D VECTOR FIELDS}\cr
 (plot_vec3)\cr
 
-plot_vec3 is similar to plot_vec2.
+plot_vec3 is similar to plot_vec.
 
 Instead of two numeric matrices, we have three numeric 3d arrays, including dz.\cr
 
@@ -430,19 +440,40 @@ It's not possible to rotate the plots, but the x and y axis can be reversed.
 
 In functions of two variables, the z coordinate represents the function value, and increasing z values run up.\cr\cr
 
-\bold{COLOR FUNCTIONS}\cr
+\bold{RASTER-BASED HEATMAPS}\cr
+
+Raster-based heatmaps, are rendered via the graphics::rasterImage function, so please refer to that function, for further technical details. The plot_dfield function sets the interpolate argument in rasterImage to false, and the plot_cfield functions sets it to true. However, it's possible that results may vary across graphics devices.
+
+Note that this feature is relatively new, and has not had extensive testing.
+
+Currently, only the first and last x and y values are used, in the rendering step.\cr
+(However, you still need the whole sequences, because the x and y values are used in other parts of the code).
+
+Which means that, x and y, if provided, need to be equally-spaced.\cr
+There's no test for this, and plots with unequally-spaced x and y values will produce incorrect output.
+
+Raster-based heatmaps are likely to render faster, which is especially noticeable for high resolution heatmaps.\cr\cr
+
+\bold{PLOT COLORS}\cr
 
 The color function (colf) can be any function that maps a numeric vector/matrix (as its first argument) to a character vector/matrix of R colors, however, I recommend using litmus objects. The litmus-fitting function (colff), is a function that maps a numeric vector (also, as its first argument) to a valid color function, however, I recommend using a function that returns a litmus object. 
 
-Assuming that all colf, colff and colors are missing, a litmus-fitting function is determined by global options, then the litmus object is fitted to the bin values, then the colors are computed from the litmus object.
+Assuming that colf, colff and colors are missing, a litmus-fitting function is determined by calling one of the "st" functions.
+
+Refer to \link{Standardized Palette Interface}.
+
+The default litmus-fitting function will be determined by the theme argument, if the theme argument is provided, otherwise, it will be determined by global options.
+
+Then the litmus object is fitted to the input values (usually, fv), then the colors are computed from the litmus object.
+
+Similar principles apply to top.color, side.color and iso.colors, except that the "st" functions returns the colors rather than litmus-fitting functions.
 
 In some cases, it may be useful to wrap a predefined litmus-fitting function.\cr
 e.g. To use nonstandard hot and cold colors, wrap the hot.and.cold.fit function, then set the colff argument to the wrapper function.
 
-Opaque color functions are preferrable in 2d heatmaps.\cr\cr
+Opaque color functions are preferable in 2d heatmaps.\cr\cr
 
-
-\bold{NOTES}\cr
+\bold{ADDITIONAL NOTES}\cr
 
 If using plot_bar, plot_surface or plot_trisurface to plot constant or near-constant values, set zlim, for a better result.\cr
 Noting that functions that are constant in theory, may produce non-constant values when computed via floating point arithmetic.
@@ -459,12 +490,12 @@ There's no guarantee that default contour lines will be suitable.
 \link{Functional Versions}\cr
 Which take a function as their main argument.
 
-\link{Global Options}
-
 \link{litmus}, \link{litmus.fit}
 
 \link{Predefined Litmus Objects}, \link{Predefined Litmus-Fitting Functions}\cr
 With predefined colors.
+
+\link{Standardized Palette Interface}, \link{Global Options}
 }
 \examples{
 #NOTE THAT THERE ARE MORE EXAMPLES IN:

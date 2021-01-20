@@ -1,5 +1,5 @@
-#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
-#Copyright (C), Abby Spurdle, 2020
+#barsurf: Contour Plots, 3D Plots, Vector Fields and Heatmaps
+#Copyright (C), Abby Spurdle, 2018 to 2020
 
 #This program is distributed without any warranty.
 
@@ -35,6 +35,7 @@ heat.iso.colors = function () .icol (.heat.iso)
 ########################################
 #litmus objects
 ########################################
+gold.litmus = function (a=0, b=1) .predef (a, b, .gold$colvs, .gold$color.space)
 blue.litmus = function (a=0, b=1) .predef (a, b, .blue$colvs, .blue$color.space)
 green.litmus = function (a=0, b=1) .predef (a, b, .green$colvs, .green$color.space)
 heat.litmus = function (a=0, b=1) .predef (a, b, .heat$colvs, .heat$color.space)
@@ -66,6 +67,8 @@ hot.and.cold = function (t=0, d=1, ..., hot.hue=35, cold.hue=255)
 ########################################
 #litmus-fitting functions
 ########################################
+gold.litmus.fit = function (x, ..., reverse=FALSE, equalize=0.85)
+	.predef.fit (x, .gold$colvs, .gold$color.space, reverse, equalize)
 blue.litmus.fit = function (x, ..., reverse=FALSE, equalize=0.85)
 	.predef.fit (x, .blue$colvs, .blue$color.space, reverse, equalize)
 green.litmus.fit = function (x, ..., reverse=FALSE, equalize=0.85)
@@ -118,7 +121,7 @@ glass.rainbow.fit = function (x, alpha=0.3, ..., c=42.5, l=62.5, start=42.5, end
 	.predef.fit (x, colvs, "HCL", FALSE, equalize)
 }
 
-hot.and.cold.fit = function (x, ..., t=0, hot.hue=35, cold.hue=255, equalize=0.85)
+hot.and.cold.fit = function (x, ..., t=0, symetric=TRUE, hot.hue=35, cold.hue=255, equalize=0.85)
 {	n = length (.hc.chroma)
 	I = c (n, n)
 
@@ -126,19 +129,29 @@ hot.and.cold.fit = function (x, ..., t=0, hot.hue=35, cold.hue=255, equalize=0.8
 	warm = cbind (c (cold.hue, hot.hue), .hc.chroma [I], .hc.lum [I]) 
 	hot = cbind (hot.hue, rev (.hc.chroma), rev (.hc.lum) )
 
+	t = sort (t)
 	if (length (t) == 1)
-	{	x1 = c (x [x < t], t)
+	{	x1 = c (x [x <= t], t)
 		x2 = c (t, x [x >= t])
+		if (symetric)
+		{	x1 = c (x1, 2 * t - x2)
+			x2 = c (x2, 2 * t - x1)
+		}
 		if (length (x1) < 2 || length (x2) < 2)
-			stop ("needs transition point, with one or more points, on each side")
+				stop ("needs one or more points, on each side")
 		f1 = .predef.fit (x1, cold, "HCL", FALSE, equalize)
 		f2 = .predef.fit (x2, hot, "HCL", FALSE, equalize)
 		mlitmus (f1, f2)
 	}
 	else if (length (t) == 2)
-	{	x1 = c (x [x < t [1] ], t [1] )
-		x2 = c (t [1], x [x >= t [1] & x < t [2] ], t [2])
+	{	x1 = c (x [x <= t [1] ], t [1] )
+		x2 = c (t [1], x [x >= t [1] & x <= t [2] ], t [2])
 		x3 = c (t [2], x [x >= t [2] ])
+		if (symetric)
+		{	sumt = sum (t)
+			x1 = c (x1, sumt - x3)
+			x3 = c (x3, sumt - x1)
+		}
 		f1 = .predef.fit (x1, cold, "HCL", FALSE, equalize)
 		f2 = .predef.fit (x2, warm, "HCL", FALSE, equalize)
 		f3 = .predef.fit (x3, hot, "HCL", FALSE, equalize)
@@ -151,6 +164,8 @@ hot.and.cold.fit = function (x, ..., t=0, hot.hue=35, cold.hue=255, equalize=0.8
 ########################################
 #other
 ########################################
+gold.seq = function (n, ...)
+	gold.litmus (1, n, ...)(1:n)
 blue.seq = function (n, ..., hcv=FALSE)
 {	if (hcv) blue.litmus.hcv (1, n, ...)(1:n)
 	else blue.litmus (1, n, ...)(1:n)
@@ -162,6 +177,8 @@ green.seq = function (n, ..., hcv=FALSE)
 rainbow.seq = function (n, ...) rainbow.litmus (1, n, ...)(1:n)
 heat.seq = function (n, ...) heat.litmus (1, n, ...)(1:n)
 
+gold.fit = function (x, ...)
+	gold.litmus.fit (x, ...)(x)
 blue.fit = function (x, ..., hcv=FALSE)
 {	if (hcv) blue.litmus.fit.hcv (x, ...)(x)
 	else blue.litmus.fit (x, ...)(x)

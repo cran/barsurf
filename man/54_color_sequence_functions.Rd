@@ -1,8 +1,10 @@
 \name{54_color_sequence_functions}
+\alias{gold.seq}
 \alias{blue.seq}
 \alias{green.seq}
 \alias{rainbow.seq}
 \alias{heat.seq}
+\alias{gold.fit}
 \alias{blue.fit}
 \alias{green.fit}
 \alias{rainbow.fit}
@@ -11,11 +13,13 @@
 \description{
 These are convenience functions that combine creating a litmus object and evaluating it, into one step.}
 \usage{
+gold.seq (n, \dots)
 blue.seq (n, \dots, hcv=FALSE)
 green.seq (n, \dots, hcv=FALSE)
 rainbow.seq (n, \dots)
 heat.seq (n, \dots)
 
+gold.fit (x, \dots)
 blue.fit (x, \dots, hcv=FALSE)
 green.fit (x, \dots, hcv=FALSE)
 rainbow.fit (x, \dots)

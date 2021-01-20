@@ -1,5 +1,5 @@
-#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
-#Copyright (C), Abby Spurdle, 2020
+#barsurf: Contour Plots, 3D Plots, Vector Fields and Heatmaps
+#Copyright (C), Abby Spurdle, 2018 to 2020
 
 #This program is distributed without any warranty.
 
@@ -18,7 +18,7 @@ plot_bar = function (x, y, fv, ...,
 	continuous.axes=FALSE,
 	zlim, xat, yat, xlabs, ylabs,
 	nhl = opt.nhl (),
-	top.color = opt.top.color (), side.color = opt.side.color () )
+	top.color = st.top.color (theme), side.color = st.side.color (theme), theme)
 {	args = .extract.private.args (...)
 	if (! is.null (args$arrows) )
 		ref.arrows = args$arrows
@@ -89,8 +89,8 @@ plot_surface = function (x, y, fv, ...,
 	ref.arrows = opt.ref.arrows (), reverse=FALSE,
 	zlim, xat, yat, xlabs, ylabs,
 	nhl = opt.nhl (),
-	grid.color = opt.sgrid.color (),
-	colf, colff)
+	grid.color = st.sgrid.color (theme),
+	colf, colff, theme)
 {	args = .extract.private.args (...)
 	if (! is.null (args$arrows) )
 		ref.arrows = args$arrows
@@ -145,11 +145,11 @@ plot_surface = function (x, y, fv, ...,
 	if (! grid)
 		grid.color = NA
 	if (gradient.shading)
-	{	colf = .ST (colf, colff, w, NULL, "lum")
+	{	colf = .ST (colf, colff, w, theme, NULL, "lum")
 		colors = colf (w)
 	}
 	else
-	{	colf = .ST (colf, colff, fv0, NULL, "lum")
+	{	colf = .ST (colf, colff, fv0, theme, NULL, "lum")
 		colors = colf (fv0)
 	}
 	for (i in (nx - 1):1)
@@ -172,8 +172,8 @@ plot_trisurface = function (x, y, fv, ...,
 	zlim,
 	xat, yat, xlabs, ylabs,
 	nhl = opt.nhl (),
-	grid.color = opt.sgrid.color (),
-	colf, colff)
+	grid.color = st.sgrid.color (theme),
+	colf, colff, theme)
 {	axes = .dbl (axes)
 	ref.arrows = .dbl (ref.arrows)
 
@@ -227,7 +227,9 @@ plot_trisurface = function (x, y, fv, ...,
 	if (z.axis) .z.axis (zlab, zlim)
 
 	line.width = .fine.line.width ()
-	colf = .ST (colf, colff, c (w1, w2), NULL, "lum")
+	if (! grid)
+		grid.color = NA
+	colf = .ST (colf, colff, c (w1, w2), theme, NULL, "lum")
 	colors1 = colf (w1)
 	colors2 = colf (w2)
 	for (i in (n - 1):1)

@@ -1,5 +1,5 @@
-#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
-#Copyright (C), Abby Spurdle, 2020
+#barsurf: Contour Plots, 3D Plots, Vector Fields and Heatmaps
+#Copyright (C), Abby Spurdle, 2018 to 2020
 
 #This program is distributed without any warranty.
 
@@ -22,32 +22,41 @@
 }
 
 .sb0 = function (type, s)
-{	.val.theme (s)
-
-	str = paste0 (s, ".", type)
-	eval (str2lang (str) )()
+{	if (missing (s) )
+		.st (type)
+	else
+	{	.val.theme (s)
+		str = paste0 (s, ".", type)
+		eval (str2lang (str) )()
+	}
 }
 
 .sgrid0 = function (s)
-{	.val.theme (s)
-
-	str = paste0 (".sgrid.colors")
-	as.vector (eval (str2lang (str) )[s])
+{	if (missing (s) )
+		.st ("sgrid.color")
+	else
+	{	.val.theme (s)
+		as.vector (eval (str2lang (".sgrid.colors") )[s])
+	}
 }
 
 .st0 = function (s, type="main", ret.str=FALSE)
-{	.val.theme (s)
-	.val.type (type)
-
-	str = paste0 (".s", s)
-	v = eval (str2lang (str) )[[type]]
-	str = paste0 (v [1], ".litmus.fit")
-	if (length (v) == 2)
-		str = paste0 (str, ".", v [2])
-	if (ret.str)
-		str
+{	if (missing (s) )
+		.st (type, TRUE)
 	else
-		eval (str2lang (str) )
+	{	.val.theme (s)
+		.val.type (type)
+	
+		str = paste0 (".s", s)
+		v = eval (str2lang (str) )[[type]]
+		str = paste0 (v [1], ".litmus.fit")
+		if (length (v) == 2)
+			str = paste0 (str, ".", v [2])
+		if (ret.str)
+			str
+		else
+			eval (str2lang (str) )
+	}
 }
 
 set.bs.options = function (...,
@@ -133,14 +142,3 @@ st.litmus.fit.lum = function (theme) .st0 (theme, "lum")
 	else
 		str
 }
-
-opt.top.color = function () .st ("top.color")
-opt.side.color = function () .st ("side.color")
-opt.sgrid.color = function () .st ("sgrid.color")
-opt.iso.colors = function () .st ("iso.colors")
-
-opt.litmus.fit = function () .st ("main", TRUE)
-opt.litmus.fit.hcv = function () .st ("hcv", TRUE)
-opt.litmus.fit.glass = function () .st ("glass", TRUE)
-opt.litmus.fit.flow = function () .st ("flow", TRUE)
-opt.litmus.fit.lum = function () .st ("lum", TRUE)

@@ -1,5 +1,5 @@
-#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
-#Copyright (C), Abby Spurdle, 2020
+#barsurf: Contour Plots, 3D Plots, Vector Fields and Heatmaps
+#Copyright (C), Abby Spurdle, 2018 to 2020
 
 #This program is distributed without any warranty.
 
@@ -53,15 +53,15 @@
 	invisible (NULL)
 }
 
-.ST = function (colf, colff, fv, hcv=NULL, type=NULL, ...)
+.ST = function (colf, colff, fv, theme, hcv=NULL, type=NULL, ...)
 {	if (missing (colf) )
 	{	if (missing (colff) )
 		{	if (is.null (type) )
-			{	if (hcv) colff = opt.litmus.fit.hcv ()
-				else colff = opt.litmus.fit ()
+			{	if (hcv) colff = st.litmus.fit.hcv (theme)
+				else colff = st.litmus.fit (theme)
 			}
 			else
-				colff = .st (type, TRUE)
+				colff = .st0 (theme, type)
 		}
 		colf = colff (fv, ...)
 	}
@@ -144,13 +144,9 @@ matrix.margins = function ()
 #deprecated
 plotf_cfield_3d = function (..., reverse.z=FALSE)
 	plotf_cfield3 (..., z.reverse=reverse.z)
-barface = function ()
-{	f = function (top)
-	{	if (top) opt.top.color ()
-		else opt.side.color ()
-	}
-}
-litmus.rainbow.fit = function (...) rainbow.litmus.fit (...)
+opt.top.color = function () .st ("top.color")
+opt.side.color = function () .st ("side.color")
+opt.litmus.fit = function () .st ("main", TRUE)
 
 #not deprecated
 #but includes deprecated args: arrows, cols

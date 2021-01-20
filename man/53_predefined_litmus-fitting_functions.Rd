@@ -1,5 +1,6 @@
 \name{53_predefined_litmus-fitting_functions}
 \alias{Predefined Litmus-Fitting Functions}
+\alias{gold.litmus.fit}
 \alias{blue.litmus.fit}
 \alias{green.litmus.fit}
 \alias{heat.litmus.fit}
@@ -19,6 +20,7 @@
 \title{Predefined Litmus-Fitting Functions}
 \description{Functions that wrap the main litmus-fitting function, with predefined colors.}
 \usage{
+gold.litmus.fit (x, \dots, reverse=FALSE, equalize=0.85)
 blue.litmus.fit (x, \dots, reverse=FALSE, equalize=0.85)
 green.litmus.fit (x, \dots, reverse=FALSE, equalize=0.85)
 heat.litmus.fit (x, \dots, reverse=FALSE, equalize=0.85)
@@ -41,7 +43,7 @@ rainbow.litmus.fit.2 (x, \dots, c=50, l=70, start=0, end=360,
 glass.rainbow.fit (x, alpha=0.3, \dots, c=42.5, l=62.5, start=42.5, end=260,
     equalize=0.85)
 
-hot.and.cold.fit (x, \dots, t=0, hot.hue=35, cold.hue=255,
+hot.and.cold.fit (x, \dots, t=0, symetric=TRUE, hot.hue=35, cold.hue=255,
     equalize=0.85)
 }
 \arguments{
@@ -51,6 +53,7 @@ hot.and.cold.fit (x, \dots, t=0, hot.hue=35, cold.hue=255,
 \item{c, l, start, end}{Same as colorspace::rainbow_hcl.}
 \item{alpha}{A numeric vector giving the alpha component. If it has two or more values, then each alpha value is assigned to each knot.}
 \item{t}{Numeric of length one or two, giving the transition points between "hot" and cold".\cr Two points can be used for a softer effect, but they should be relatively close.}
+\item{symetric}{Logical, if true, the hot and cold sides should be relatively symetrical.}
 \item{hot.hue, cold.hue}{Numerics, the hot and cold hues.}
 \item{\dots}{Ignored.}
 }

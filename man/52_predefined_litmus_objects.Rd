@@ -1,5 +1,7 @@
 \name{52_predefined_litmus_objects}
 \alias{Predefined Litmus Objects}
+\alias{gold.litmus}
+\alias{blue.litmus}
 \alias{blue.litmus}
 \alias{green.litmus}
 \alias{heat.litmus}
@@ -14,6 +16,7 @@
 \title{Predefined Litmus Objects}
 \description{Functions that wrap the main litmus constructor, with predefined colors.}
 \usage{
+gold.litmus (a=0, b=1)
 blue.litmus (a=0, b=1)
 green.litmus (a=0, b=1)
 heat.litmus (a=0, b=1)

@@ -1,5 +1,5 @@
-#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
-#Copyright (C), Abby Spurdle, 2020
+#barsurf: Contour Plots, 3D Plots, Vector Fields and Heatmaps
+#Copyright (C), Abby Spurdle, 2018 to 2020
 
 #This program is distributed without any warranty.
 
@@ -11,7 +11,7 @@
 #Also, this license should be available at:
 #https://cran.r-project.org/web/licenses/GPL-2
 
-plot_vec2 = function (x, y, dx, dy, ...,
+plot_vec = function (x, y, dx, dy, ...,
 	main="", xlab="x", ylab="y",
 	vectors=TRUE, heatmap=TRUE,
 	include.outermost.vectors=FALSE,
@@ -19,7 +19,7 @@ plot_vec2 = function (x, y, dx, dy, ...,
 	xyrel, xat, yat, xlabs, ylabs,
 	arrowh.length=1.75, arrowh.width = 0.75 * arrowh.length,
 	arrow.color="#000000", fill.color="#08080810",
-	colf, colff, hcv=FALSE)
+	colf, colff, theme, hcv=FALSE)
 {	axes = .dbl (axes)
 	reverse = .dbl (reverse)
 	swap.sides = .dbl (swap.sides)
@@ -43,9 +43,9 @@ plot_vec2 = function (x, y, dx, dy, ...,
 			}
 		}
 		if (hcv)
-			colf = .ST (colf, colff, w, TRUE)
+			colf = .ST (colf, colff, w, theme, TRUE)
 		else
-			colf = .ST (colf, colff, w, NULL, "flow")
+			colf = .ST (colf, colff, w, theme, NULL, "flow")
 		colors = colf (w)
 		.plot.heatmap (nx - 1, ny - 1, x, y, colors)
 	}

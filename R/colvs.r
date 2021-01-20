@@ -1,5 +1,5 @@
-#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
-#Copyright (C), Abby Spurdle, 2020
+#barsurf: Contour Plots, 3D Plots, Vector Fields and Heatmaps
+#Copyright (C), Abby Spurdle, 2018 to 2020
 
 #This program is distributed without any warranty.
 
@@ -16,7 +16,7 @@
 .colm = function (color.space, ..., nc=3)
 	list (colvs = matrix (unlist (list (...) ),, nc, byrow=TRUE), color.space=color.space)
 
-.sgold = list (main="blue", hcv = c ("blue", "hcv"), flow = c ("blue", "flow"), lum = c ("gold", "lum") )
+.sgold = list (main="gold", hcv = c ("blue", "hcv"), flow = c ("blue", "flow"), lum = c ("gold", "lum") )
 .sblue = list (main="blue", hcv = c ("blue", "hcv"), flow = c ("blue", "flow"), lum = c ("blue", "lum") )
 .sgreen = list (main="green", hcv = c ("green", "hcv"), flow = c ("green", "flow"), lum = c ("green", "lum") )
 .spurple = list (main="blue", hcv = c ("blue", "hcv"), flow = c ("blue", "flow"), lum = c ("purple", "lum") )
@@ -67,6 +67,7 @@
 	25, 60, 40, 0.25,
 	20, 40, 40, 0.05)
 
+.gold = .colv ("HCL", c (52.5, 65, 77.5, 82.5, 95, 107.5), 40, 70)
 .blue = .colv ("HCL", c (180, 210, 220, 275), 35, 75)
 .green = .colv ("HCL", c (170, 140, 130, 95), 35, 75)
 .heat = .colm ("sRGB",

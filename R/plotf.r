@@ -1,5 +1,5 @@
-#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
-#Copyright (C), Abby Spurdle, 2020
+#barsurf: Contour Plots, 3D Plots, Vector Fields and Heatmaps
+#Copyright (C), Abby Spurdle, 2018 to 2020
 
 #This program is distributed without any warranty.
 
@@ -177,14 +177,14 @@ plotf_cfield3 = function (f, xlim, ylim=xlim, zlim=xlim, ..., nslides=6, z.rever
 	plot_cfield3 (x, y, z, fv, ..., reverse = .is.reverse (xlim, ylim), z.reverse=z.reverse)
 }
 
-.plotf_vec2 = function (f, xlim, ylim, ..., add=FALSE, vectors=TRUE, heatmap=TRUE, nv, nh)
+.plotf_vec = function (f, xlim, ylim, ..., add=FALSE, vectors=TRUE, heatmap=TRUE, nv, nh)
 {	nv = .dbl (nv)
 	nh = .dbl (nh)
 	if (all (nv == nh) )
 	{	x = seq (xlim [1], xlim [2], length.out = nv [1])
 		y = seq (ylim [1], ylim [2], length.out = nv [2])
 		fv = .outer.dxdy (f, nv, x, y)
-		plot_vec2 (x, y, fv [[1]], fv [[2]], add=add, vectors=vectors, heatmap=heatmap, ...,
+		plot_vec (x, y, fv [[1]], fv [[2]], add=add, vectors=vectors, heatmap=heatmap, ...,
 			reverse = .is.reverse (xlim, ylim) )
 	}
 	else
@@ -192,21 +192,21 @@ plotf_cfield3 = function (f, xlim, ylim=xlim, zlim=xlim, ..., nslides=6, z.rever
 		{	x = seq (xlim [1], xlim [2], length.out = nh [1])
 			y = seq (ylim [1], ylim [2], length.out = nh [2])
 			fv = .outer.dxdy (f, nh, x, y)
-			plot_vec2 (x, y, fv [[1]], fv [[2]], add=add, vectors=FALSE, ...,
+			plot_vec (x, y, fv [[1]], fv [[2]], add=add, vectors=FALSE, ...,
 				reverse = .is.reverse (xlim, ylim) )
 		}
 		if (vectors)
 		{	x = seq (xlim [1], xlim [2], length.out = nv [1])
 			y = seq (ylim [1], ylim [2], length.out = nv [2])
 			fv = .outer.dxdy (f, nv, x, y)
-			plot_vec2 (x, y, fv [[1]], fv [[2]], add=heatmap, heatmap=FALSE, ...,
+			plot_vec (x, y, fv [[1]], fv [[2]], add = add || heatmap, heatmap=FALSE, ...,
 				reverse = .is.reverse (xlim, ylim) )
 		}
 	}
 }
 
-plotf_vec2 = function (vf, xlim, ylim=xlim, ..., n=20, nv=n, nh = max (n, 40) )
-	.plotf_vec2 (vf, xlim, ylim, ..., nv=nv, nh=nh)
+plotf_vec = function (vf, xlim, ylim=xlim, ..., n=20, nv=n, nh = max (n, 40) )
+	.plotf_vec (vf, xlim, ylim, ..., nv=nv, nh=nh)
 
 plotf_vec3 = function (vf, xlim, ylim=xlim, zlim=xlim, ..., n = c (20, 22, 16) )
 {	n = .trpl (n)

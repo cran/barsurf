@@ -1,5 +1,5 @@
-#barsurf: Multivariate Function Visualization and Smooth Multiband Color Interpolation
-#Copyright (C), Abby Spurdle, 2020
+#barsurf: Contour Plots, 3D Plots, Vector Fields and Heatmaps
+#Copyright (C), Abby Spurdle, 2018 to 2020
 
 #This program is distributed without any warranty.
 
@@ -66,7 +66,7 @@ plot_isosurface = function (x, y, z, fv, ..., fb, fq,
 	nested=TRUE, maximal,
 	xat, yat, xlabs, ylabs,
 	nhl = opt.nhl (),
-	wire.color="#808080", iso.colors = opt.iso.colors () )
+	wire.color="#808080", iso.colors = st.iso.colors (theme), theme)
 {	n = 0
 
 	axes = .dbl (axes)
@@ -182,7 +182,7 @@ plot_cfield3 = function (x, y, z, fv, ..., fb,
 	ncontours=6, emph="n",
 	xat, yat, xlabs, ylabs, zlabs,
 	nhl = opt.nhl (),
-	colf, colff)
+	colf, colff, theme)
 {	axes = .dbl (axes)
 	reverse = .dbl (reverse)
 	ref.arrows = .dbl (ref.arrows)
@@ -252,7 +252,7 @@ plot_cfield3 = function (x, y, z, fv, ..., fb,
 				}
 			}
 		}
-		color.function = .ST (colf, colff, unlist (w), NULL, "glass", alpha=alpha)
+		color.function = .ST (colf, colff, unlist (w), theme, NULL, "glass", alpha=alpha)
 	}
 	for (k in 1:nz)
 	{	if (heatmap)

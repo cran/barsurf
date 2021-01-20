@@ -39,5 +39,3 @@ colf <- mlitmus (blue.litmus (0, -1), green.litmus (0, 1) )
 plot (colf)
 colf (c (-1, 0, 1) )
 }
-
-

@@ -8,7 +8,7 @@
 \alias{plotf_trisurface}
 \alias{plotf_isosurface}
 \alias{plotf_cfield3}
-\alias{plotf_vec2}
+\alias{plotf_vec}
 \alias{plotf_vec3}
 \title{Plotting Functions for Function Objects}
 \description{
@@ -36,7 +36,7 @@ plotf_isosurface (f, xlim, ylim=xlim, zlim=xlim, \dots,
 plotf_cfield3 (f, xlim, ylim=xlim, zlim=xlim, \dots,
     nslides=6, z.reverse=FALSE, z, n=30)
 
-plotf_vec2 (vf, xlim, ylim=xlim, \dots, n=20, nv=n, nh = max (n, 40) )
+plotf_vec (vf, xlim, ylim=xlim, \dots, n=20, nv=n, nh = max (n, 40) )
 plotf_vec3 (vf, xlim, ylim=xlim, zlim=xlim, \dots, n = c (20, 22, 16) )
 }
 \arguments{
@@ -45,7 +45,7 @@ plotf_vec3 (vf, xlim, ylim=xlim, zlim=xlim, \dots, n = c (20, 22, 16) )
     In plotf_tricontour and plotf_trisurface, a numeric-valued function of two weight variables, that (along with a third implicit variable) sum to one.\cr
     In plotf_isosurface and plotf_cfield3, a numeric-valued function of three variables.}
 \item{vf}{
-    In plotf_vec2, a function of two variables that returns a two-column matrix, giving the dx and dy values.\cr
+    In plotf_vec, a function of two variables that returns a two-column matrix, giving the dx and dy values.\cr
     In plotf_vec3, a function of three variables that returns a three-column matrix, giving the dx, dy and dz values.}
 \item{xlim, ylim, zlim}{
     In plotf_dfield and plotf_bar, a length-two integer vector, giving the plotting ranges.\cr
@@ -160,6 +160,6 @@ plotf_cfield3 (bispherical.dist, c (-3, 3),, c (-2, 2), emph="l")
 ##############################
 #vector fields
 ##############################
-plotf_vec2 (circular.field, c (-1.5, 1.5) )
+plotf_vec (circular.field, c (-1.5, 1.5) )
 plotf_vec3 (plughole.field, c (-1.5, 1.5),, c (-0.5, 1) )
 }

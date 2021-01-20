@@ -1,4 +1,4 @@
-%\VignetteIndexEntry{Multivariate Function Visualization and Smooth Multiband Color Interpolation}
+%\VignetteIndexEntry{Contour Plots, 3D Plots, Vector Fields and Heatmaps}
 \documentclass{article}
 \usepackage[a4paper,top=2.6cm,bottom=3.6cm,left=3.6cm,right=3.6cm]{geometry}
 \usepackage{parskip,verbatim,amsmath,amssymb,color}
@@ -42,9 +42,9 @@ par(mar=c(4.1, 4.1, 1.35, 1.6), cex=0.7, cex.main=1)))
 set.seed (1)
 @
 
-\stitle {barsurf}{0.6.1}{Multivariate Function Visualization\\and\\Smooth\\Multiband Color Interpolation}
+\stitle {barsurf}{0.7.0}{Contour Plots, 3D Plots,\\Vector Fields and Heatmaps}
 
-\sabstract {Combined contour/heatmap plots, 3d bar/surface plots, isosurface plots, triangular plots and 2d/3d vector fields. Supports smooth multiband color interpolation, via a system of litmus objects, in sRGB, HSV and HCL color spaces. There are predefined litmus objects which interpolate over hue only, for near-uniform perception.}
+\sabstract {Combined contour/heatmap plots, 3d bar/surface plots, 2d/3d triangular plots, isosurface plots and 2d/3d vector fields. By default, uses vector graphics, but it's possible to use raster graphics for regular heatmaps. Builds on the colorspace package (Zeileis, et al., 2020 <doi:10.18637/jss.v096.i01>), by supporting smooth multiband color interpolation, in sRGB, HSV and HCL color spaces.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section* {Introduction}
@@ -78,8 +78,9 @@ A system of ``litmus'' objects support smooth multiband color interpolation, pri
 
 Note that:
 \begin {itemize}
-\item All plots use vector graphics.\\
-But high resolution heatmaps can produce smooth raster-like visual effects.
+\item By default, all plots use vector graphics.\\
+But there's an option to use raster graphics for regular heatmaps.\\
+(This applies to the \tmu {plot\_dfield} and \tmu {plot\_cfield} functions, discussed later).
 \item Currently, 3d plots use a diamond-like orthographic/dimetric projection, with a fixed viewing angle.\\
 Plots can't be rotated, however, most plots can be reversed along one or more axes.\\
 Reversing a 3d plot, in both the x and y axes, is equivalent to a 180\textdegree rotation.
@@ -155,7 +156,8 @@ Let's plot the rotated sinc function, adapted from the graphics::\tmu {persp} ex
 
 \begin {center}
 <<fig=TRUE, width=4.75, height=3>>=
-plotf_cfield (rotated.sinc, c (-15.5, 15.5), fb=0, n=40, hcv=TRUE)
+plotf_cfield (rotated.sinc, c (-15.5, 15.5), fb=0, n=40,
+    raster=TRUE, hcv=TRUE)
 @
 
 <<fig=TRUE, width=4.75, height=3>>=
@@ -246,7 +248,7 @@ plotf_cfield3 (bispherical.dist, c (-3, 3),, c (-2, 2), emph="l")
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section* {2D Vector Fields}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The \tmu {plot\_vec2} and \tmu {plotf\_vec2} functions can be used to produce plots of 2d vector fields.
+The \tmu {plot\_vec} and \tmu {plotf\_vec} functions can be used to produce plots of 2d vector fields.
 
 They're similar to the \tmu {plot\_cfield} and \tmu {plotf\_cfield} functions.
 
@@ -256,7 +258,7 @@ Here's a simple example:
 
 \begin {center}
 <<fig=TRUE, width=4.75, height=3>>=
-plotf_vec2 (circular.field, c (-1.6, 1.6), c (-1.1, 1.1) )
+plotf_vec (circular.field, c (-1.6, 1.6), c (-1.1, 1.1) )
 @
 \end {center}
 
@@ -265,7 +267,7 @@ plotf_vec2 (circular.field, c (-1.6, 1.6), c (-1.1, 1.1) )
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The \tmu {plot\_vec3} and \tmu {plotf\_vec3} functions can be used to produce plots of 3d vector fields.
 
-They're similar to the \tmu {plot\_vec2} and \tmu {plotf\_vec2} functions, from the previous section.
+They're similar to the \tmu {plot\_vec} and \tmu {plotf\_vec} functions, from the previous section.
 
 In the array version, there's three input arrays, dx, dy and dy.\\
 In the functional version, the function needs to return a three-column matrix.
@@ -287,12 +289,15 @@ This package uses the base graphics system, but largely, uses a different system
 Plotting colors, can be changed by:
 
 \begin {itemize}
-\item Changing the theme, which is a global option.
+\item Changing the theme, in a function call.
+\item Changing the theme, via a global option.
 \item Changing specific global options, for particular plotting functions.
 \item Setting color-related arguments, when calling the plotting functions.
 \end {itemize}
 
-Refer to the \tmu {set.bs.options} function, for more information on global options.
+Many functions have a theme argument, which is an optional string that can be set to any of the supported themes.
+
+Refer to the \tmu {set.bs.theme} and \tmu {set.bs.options} functions, for more information on the supported themes, and global options
 
 This package uses a system of ``litmus'' objects, for heatmaps and surface plots.
 
@@ -413,9 +418,9 @@ plot (my.litmus.fit (u) )
 
 Spurdle, A. (2020). kubik: Cubic Hermite Splines and Related Optimization Methods
 
-Ihaka, R., Murrell, P., Hornik, K., Fisher, J. Stauffer, R., Wilke, C., McWhite, C., \&\\Zeileis, A. (2019). colorspace: A Toolbox for Manipulating and Assessing Colors and Palettes
+Ihaka, R., Murrell, P., Hornik, K., Fisher, J. Stauffer, R., Wilke, C., McWhite, C., \&\\Zeileis, A. (2020). colorspace: A Toolbox for Manipulating and Assessing Colors and Palettes
 
-Feng, D., \& Tierney, L. (2013) misc3d: Miscellaneous 3D Plots
+Feng, D., \& Tierney, L. (2020) misc3d: Miscellaneous 3D Plots
 
 \subsection* {Notes}
 
@@ -434,11 +439,11 @@ colf <- blue.litmus.fit.hcv (fv)
 \begin {center}
 <<fig=TRUE, width=4.75, height=3>>=
 #larger heatmap
-plot_cfield (x, y, fv,
-    contours=FALSE, colf=colf)
+plotf_cfield (rotated.sinc, range (x), n=40,
+    contours=FALSE, raster=TRUE, colf=colf)
 #smaller heatmap
-plotf_cfield (rotated.sinc, c (-4, 4),
-    add=TRUE, contours=FALSE, colf=colf, n=60)
+plotf_cfield (rotated.sinc, c (-4, 4), n=40,
+    add=TRUE, contours=FALSE, raster=TRUE, colf=colf)
 #contour lines
 plot_cfield (x, y, fv,
     add=TRUE, fb=0, heatmap=FALSE)
